@@ -2266,7 +2266,7 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
       <h2 class="m-title">Conheça o SKYNETchat</h2>
       <p class="m-sub">Um chat de IA feito para quem fala português. Para escrever, estudar, programar e criar, sem complicação.</p>
       <div class="m-stack" style="gap:16px">
-        <div class="feat"><div class="m-icon">${icon('i-globe')}</div><div><b>Português de verdade</b><span>Entende gíria, contexto e o jeito que a gente fala.</span></div></div>
+        <div class="feat"><div class="m-icon">${icon('i-unlock')}</div><div><b>Liberdade para perguntar</b><span>Conhecimento sem travas desnecessárias: respostas diretas, sem rodeio e sem sermão.</span></div></div>
         <div class="feat"><div class="m-icon">${icon('i-bulb')}</div><div><b>Rápido ou pensativo</b><span>Resposta na hora no dia a dia, raciocínio com calma quando o problema pede.</span></div></div>
         <div class="feat"><div class="m-icon">${icon('i-group')}</div><div><b>Ferramentas que crescem com você</b><span>Imagens, conversas em grupo, projetos e, em breve, o Coder.</span></div></div>
       </div>
