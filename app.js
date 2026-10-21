@@ -1059,7 +1059,7 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
       : img ? '<canvas class="px-scene" id="pxScene" aria-hidden="true"></canvas><h1>Imagens</h1><p>Descreva o que você imagina. O SKYNETchat cria quatro variações.</p>'
       : '';
     if (img) pixelScene($('#pxScene'));
-    $$('[data-modal="grupo"]').forEach(b => b.classList.toggle('is-active', !!s));
+    syncNav();
     renderSuggestions();
     renderChips();
     updatePlaceholder();
@@ -1215,7 +1215,15 @@ Enquanto isso, teste os atalhos da tela inicial ou escolha outro agente na barra
     return 'Mais antigas';
   }
 
+  // No menu lateral só uma coisa fica selecionada: com uma conversa aberta, ela fica marcada no histórico e o modo
+  // (Imagens, grupo) apaga no menu, embora continue ligado no chip do campo.
+  function syncNav() {
+    const conv = !!current();
+    $$('#sidebar [data-mode]').forEach(b => b.classList.toggle('is-active', !conv && b.dataset.mode === state.mode));
+    $$('#sidebar [data-modal="grupo"]').forEach(b => b.classList.toggle('is-active', !conv && !!state.session));
+  }
   function renderHistory() {
+    syncNav();
     const note = state.prefs.noHistory ? `<p class="h-note">${icon('i-eyeoff')}<span>Histórico desligado. Novas conversas não ficam salvas.</span></p>` : '';
     const sorted = state.convs.filter(c => !c.temp && !c.project).sort((a, b) => b.updated - a.updated);
     if (!sorted.length) { historyEl.innerHTML = note || '<p class="h-empty">Suas conversas aparecem aqui.</p>'; return; }
@@ -1617,7 +1625,7 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
     if (m === 'imagens' && state.mode !== m && !isPro()) { openModal('pro', 'imagens'); return; }
     state.mode = state.mode === m ? null : m;
     if (state.mode) state.agent = state.session = null;
-    $$('[data-mode]').forEach(b => b.classList.toggle('is-active', b.dataset.mode === state.mode));
+    syncNav();
     renderContext();
   }
 
@@ -2849,8 +2857,6 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     d.on = true;
     d.offX = d.x0 - r.left;
     d.offY = d.y0 - r.top;
-    d.slot = Object.assign(document.createElement('div'), { className: 'pj-slot' });
-    grid.appendChild(d.slot);
     grid.classList.add('is-sorting');
     d.card.classList.remove('is-pressing');
     d.card.classList.add('is-dragging');
@@ -2888,9 +2894,6 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
         requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = ''; c.style.transform = ''; }));
       });
     }
-    d.slot.style.width = d.card.offsetWidth + 'px';
-    d.slot.style.height = d.card.offsetHeight + 'px';
-    d.slot.style.transform = `translate(${d.card.offsetLeft}px, ${d.card.offsetTop}px)`;
     d.card.style.transform = `translate(${left - d.card.offsetLeft}px, ${top - d.card.offsetTop}px)`;
     d.raf = requestAnimationFrame(pjFrame);
   }
@@ -2904,10 +2907,9 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     cancelAnimationFrame(d.raf);
     pjSuppressClick = true;
     setTimeout(() => { pjSuppressClick = false; }, 0);
-    // solta: o card desliza para o espaço tracejado, por cima dos outros até assentar
+    // solta: o card desliza para a vaga aberta entre os outros, por cima deles até assentar
     d.card.classList.replace('is-dragging', 'is-settling');
     d.card.style.transform = '';
-    d.slot.remove();
     document.body.classList.remove('is-grabbing');
     setTimeout(() => { d.card.classList.remove('is-settling'); $('#pjGrid')?.classList.remove('is-sorting'); }, 280);
     const ids = pjCards().map(c => c.dataset.proj);

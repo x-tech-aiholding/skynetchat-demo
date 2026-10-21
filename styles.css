@@ -1289,7 +1289,6 @@ div.prompt-card { cursor: pointer; }
 .pj-card.is-dragging { position: relative; z-index: 5; scale: 1.04; rotate: -1.2deg; transition: scale .18s var(--ease), rotate .18s var(--ease), box-shadow .2s; box-shadow: 0 22px 48px rgba(0, 0, 0, .45); background: var(--surface-3); }
 .pj-card.is-settling { position: relative; z-index: 5; transition: transform .26s var(--ease), scale .22s var(--ease), rotate .22s var(--ease); }
 .pj-grid.is-sorting .pj-card:not(.is-dragging):hover { background: var(--surface-2); }
-.pj-slot { position: absolute; left: 0; top: 0; z-index: 0; border: 1.5px dashed var(--accent-line); border-radius: var(--r-lg); background: var(--accent-soft); pointer-events: none; transition: transform .22s var(--ease); }
 body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
 .pg-tools { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
 .pg-tools .pg-search { flex: 1; margin-top: 0; }
