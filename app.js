@@ -332,6 +332,18 @@ Antes de escolher, confira se o @ está livre no Instagram e no Spotify.`,
     { id: uid(), title: 'Plano de inglês em 30 dias', updated: now - 12 * DAY, messages: [{ role: 'user', text: SUGGESTIONS[3].prompt }, { role: 'ai', text: R.ingles, model: 'Rápido' }] },
   ];
 
+  // Atalho de teste da prévia: abrir com ?plano=free ou ?plano=pro troca o plano salvo neste navegador.
+  {
+    const q = new URLSearchParams(location.search);
+    const plano = q.get('plano');
+    if (plano === 'free' || plano === 'pro') {
+      store.set('skynet-plan', plano);
+      if (plano === 'free') store.set('skynet-usage', { day: '', n: 0 });
+      q.delete('plano');
+      history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+    }
+  }
+
   const state = {
     convs: store.get('skynet-convs', null) || seed(),
     currentId: null,
@@ -2974,6 +2986,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
   /* ---------------- Conta ---------------- */
   function renderAccount() {
     const u = state.user;
+    // a etiqueta PRO do Indique e Ganhe só aparece para quem ainda não tem o Pro
+    $('#referPro').hidden = isPro();
     const av = $('#avatar');
     if (u) {
       av.classList.add('has-user');
@@ -3028,83 +3042,145 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     document.addEventListener('mousedown', () => { clearTimeout(tipT); tip.hidden = true; });
   }
 
-  /* Fundo da tela inicial: um brilho atrás do S feito de pixels pontilhados (dithering ordenado 4x4).
-     Duas manchas giram devagar e respiram, o brilho se inclina para o cursor e nasce do S a cada conversa nova.
-     O canvas tem só o tamanho do brilho, em resolução 1x ampliada em pixel, e é pintado direto: fica leve. */
+  /* Fundo da tela inicial: um globo de pixels girando com o S no centro, como uma rede de satélites.
+     Pontos de "terra" brilham mais, arcos de dados ligam pontos do globo e um satélite corre numa órbita inclinada.
+     O globo se inclina para o cursor e nasce de dentro do S a cada conversa nova. No System fica desligado. */
   let heroIntroAt = performance.now();
   (() => {
     const cv = $('#heroFx');
     const ctx = cv.getContext('2d');
-    const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + .5) / 16);
-    const CELL = 4;
-    let img = null, u32 = null, sizeFor = '', mx = null, my = null, lx = 0, ly = 0, last = 0;
+    const N = 1500, RG = 146, SIZE = 560, C = SIZE / 2;
+    const pts = Array.from({ length: N }, (_, i) => {
+      const y = 1 - (i + .5) / N * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+      const x = Math.cos(th) * r, z = Math.sin(th) * r;
+      const n = Math.sin(x * 2.2 + 1.3) * Math.cos(y * 1.9 - .6) + Math.sin(z * 2.4 + 2.1 + y * .8) * .9 + .3 * Math.sin(x * 6.1 + z * 5.3 + y * 3);
+      return { x, y, z, land: n > .35, d: pxHash(i, 7) };
+    });
+    const land = pts.filter(q => q.land);
+    const ring = Array.from({ length: 120 }, (_, i) => { const a = i / 120 * Math.PI * 2; return { x: Math.cos(a) * 1.42, y: 0, z: Math.sin(a) * 1.42 }; });
+    let arcs = [], nextArc = 0, yawOff = 0, pitchOff = 0, mx = null, my = null, last = performance.now();
+    const atm = { cv: document.createElement('canvas'), key: '', r: 0 };
     stage.addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; });
     stage.addEventListener('pointerleave', () => { mx = my = null; });
-    const pack = (h, a) => { const [r, g, b] = hexc(h); return (Math.round(a * 255) << 24 | b << 16 | g << 8 | r) >>> 0; };
+    const slerp = (a, b, s) => {
+      const dot = Math.max(-1, Math.min(1, a.x * b.x + a.y * b.y + a.z * b.z)), w = Math.acos(dot), sw = Math.sin(w) || 1;
+      const k1 = Math.sin((1 - s) * w) / sw, k2 = Math.sin(s * w) / sw;
+      return { x: a.x * k1 + b.x * k2, y: a.y * k1 + b.y * k2, z: a.z * k1 + b.z * k2, w };
+    };
     const loop = now => {
       requestAnimationFrame(loop);
-      if (!stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden || now - last < 30) return;
-      const dt = Math.min(.1, (now - last) / 1000);
-      last = now;
-      const theme = getTheme(), acc = currentAccent();
-      // No System o terminal fica limpo, sem o brilho por trás do texto.
+      const theme = getTheme();
       cv.hidden = theme === 'system';
-      if (cv.hidden) return;
-      const Rmax = 150;
-      const W = Math.ceil(Rmax * 4.4 / CELL) * CELL, H = Math.ceil(Rmax * 2.6 / CELL) * CELL;
-      if (sizeFor !== theme) {
-        sizeFor = theme;
-        cv.width = W; cv.height = H;
-        cv.style.width = W + 'px'; cv.style.height = H + 'px';
-        img = ctx.createImageData(W, H); u32 = new Uint32Array(img.data.buffer);
-      }
-      const mark = $(theme === 'system' ? '.hero-retro' : '.mark-hero').getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      if (cv.hidden || !stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden) { last = now; return; }
+      const dt = Math.min(.05, (now - last) / 1000);
+      last = now;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      if (cv.width !== SIZE * dpr) { cv.width = cv.height = SIZE * dpr; cv.style.width = cv.style.height = SIZE + 'px'; }
+      const mark = $('.mark-hero').getBoundingClientRect(), sr = stage.getBoundingClientRect();
       if (!mark.width) return;
-      const mcx = mark.left + mark.width / 2, mcy = mark.top + mark.height / 2 + (theme === 'system' ? 0 : -4);
-      const ox = Math.round(mcx - sr.left - W / 2), oy = Math.round(mcy - sr.top - H / 2);
+      const mcx = mark.left + mark.width / 2, mcy = mark.top + mark.height / 2;
+      const ox = Math.round(mcx - sr.left - C), oy = Math.round(mcy - sr.top - C);
       cv.style.transform = `translate(${ox}px, ${oy}px)`;
-      // o brilho se inclina devagar para o cursor
-      const tx = mx == null ? 0 : Math.max(-60, Math.min(60, (mx - mcx) * .12)), ty = my == null ? 0 : Math.max(-36, Math.min(36, (my - mcy) * .12));
-      lx += (tx - lx) * Math.min(1, dt * 3); ly += (ty - ly) * Math.min(1, dt * 3);
-      const cx = W / 2 + lx, cy = H / 2 + ly;
-      const px = mx == null ? null : mx - sr.left - ox, py = my == null ? null : my - sr.top - oy;
-      const t = reduced ? 1.2 : (now - heroIntroAt) / 1000;
-      const grow = reduced ? 1 : 1 - (1 - Math.min(1, t / 1.3)) ** 3;
-      const R = Rmax * (.25 + .75 * grow);
-      const b1x = cx + Math.cos(t * .42) * 46, b1y = cy + Math.sin(t * .42) * 22;
-      const b2x = cx + Math.cos(t * .31 + 2.6) * 62, b2y = cy + Math.sin(t * .31 + 2.6) * 28;
-      const breathe = .88 + .12 * Math.sin(t * 1.1);
-      const k1 = 1 / (R * R * .55), k2 = 1 / (R * R * .4), kc = 1 / (R * R * 1.6);
-      const cursorOn = mx == null ? 0 : Math.exp(-((mx - mcx) ** 2 + (my - mcy) ** 2) / 90000);
-      // faixa do texto (saudação e subtítulo): o brilho fica bem mais fraco ali para não brigar com a leitura
-      const tr = theme === 'system' ? null : [$('#greeting').getBoundingClientRect(), $('.hero-sub').getBoundingClientRect()];
-      const tTop = tr ? tr[0].top - sr.top - oy - 4 : -1e4, tBot = tr ? tr[1].bottom - sr.top - oy + 6 : -1e4;
-      const [lo, hi] = theme === 'system' ? ['#1fbf55', '#8dffb0'] : theme === 'light' ? [acc.mid, acc.solid] : [acc.solid, acc.pale];
-      const cLo = pack(lo, (theme === 'light' ? .6 : .72) * grow), cHi = pack(hi, (theme === 'light' ? .6 : .7) * grow);
-      u32.fill(0);
-      const cols = W / CELL, rows = H / CELL;
-      for (let gy = 0; gy < rows; gy++) {
-        const y = gy * CELL + CELL / 2, ey1 = (y - b1y) ** 2, ey2 = (y - b2y) ** 2, eyc = (y - cy) ** 2, wy = Math.sin(y * .04 - t * .7);
-        const row = gy * CELL * W, ny = (y - H / 2) / (H / 2);
-        const band = 1 - .72 * Math.min(1, Math.max(0, Math.min(y - tTop, tBot - y) / 14 + .5));
-        for (let gx = 0; gx < cols; gx++) {
-          const x = gx * CELL + CELL / 2, dx = (x - cx) / 1.7;
-          let f = Math.exp(-((x - b1x) ** 2 / 2.6 + ey1) * k1) * .56
-            + Math.exp(-((x - b2x) ** 2 / 2.6 + ey2) * k2) * .44
-            + Math.exp(-(dx * dx + eyc) * kc) * .26;
-          if (f < .03 && !cursorOn) continue;
-          if (cursorOn) f += Math.exp(-((x - px) ** 2 + (y - py) ** 2) / 7000) * .45 * cursorOn;
-          // some antes da borda do quadro, em elipse, para não aparecer canto reto
-          const nx = (x - W / 2) / (W / 2), edge = Math.min(1, Math.max(0, (1 - Math.sqrt(nx * nx + ny * ny)) / .4));
-          f *= breathe * (1 + .08 * Math.sin(x * .03 + t * .9) * wy) * edge * band;
-          const th = BAYER[(gy & 3) * 4 + (gx & 3)];
-          const col = f * .8 > th + .34 ? cHi : f > th + .06 ? cLo : 0;
-          if (!col) continue;
-          const o = row + gx * CELL;
-          for (let k = 0; k < CELL - 1; k++) u32.fill(col, o + k * W, o + k * W + CELL - 1);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      const t = reduced ? 3 : (now - heroIntroAt) / 1000;
+      const intro = reduced ? 1 : Math.min(1, t / 1.5);
+      // o globo gira sozinho e se inclina para o cursor
+      const tYaw = mx == null ? 0 : Math.max(-.7, Math.min(.7, (mx - mcx) / 520)), tPitch = my == null ? 0 : Math.max(-.45, Math.min(.45, (my - mcy) / 520));
+      yawOff += (tYaw - yawOff) * Math.min(1, dt * 2.4);
+      pitchOff += (tPitch - pitchOff) * Math.min(1, dt * 2.4);
+      const yaw = (reduced ? .7 : now / 1000 * .17) + yawOff, pitch = .36 + pitchOff;
+      const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const rot = q => { const x = q.x * cyw + q.z * syw, z0 = -q.x * syw + q.z * cyw; return [x, q.y * cp - z0 * sp, q.y * sp + z0 * cp]; };
+      const acc = currentAccent(), light = theme === 'light';
+      const HI = hexc(light ? acc.solid : acc.pale).join(','), LO = hexc(light ? acc.mid : acc.solid).join(','), W = light ? '13,13,16' : '255,255,255';
+      // faixa do texto: tudo fica bem mais fraco ali
+      const g = $('#greeting').getBoundingClientRect(), sub = $('.hero-sub').getBoundingClientRect();
+      const tTop = g.top - sr.top - oy - 6, tBot = sub.bottom - sr.top - oy + 6;
+      const band = y => (y > tTop && y < tBot ? .2 : 1);
+      // os pontos são agrupados por cor e opacidade (em 10 níveis) e pintados de uma vez no fim
+      const buckets = new Map();
+      const dot = (x, y, size, rgb, a) => {
+        a = Math.min(1, a * band(y));
+        if (a < .02) return;
+        const key = rgb + '|' + Math.round(a * 10);
+        let path = buckets.get(key);
+        if (!path) buckets.set(key, path = new Path2D());
+        path.rect(Math.round((x - size / 2) * 2) / 2, Math.round((y - size / 2) * 2) / 2, size, size);
+      };
+      // órbita do satélite: inclinada e fixa no espaço, desenhada por baixo do globo na metade de trás
+      const orbitTilt = .95, oc = Math.cos(orbitTilt), os = Math.sin(orbitTilt);
+      const orbit = q => { const y = q.y * oc - q.z * os, z = q.y * os + q.z * oc; return rot({ x: q.x, y, z }); };
+      const ringPts = ring.map(q => orbit(q));
+      ringPts.forEach(([x, y, z]) => { if (z < 0) dot(C + x * RG * intro, C + y * RG * intro, 1.5, LO, .24 * intro); });
+      // pontos do globo, de trás para a frente; perto do S o globo abre um respiro
+      const proj = pts.map(q => {
+        const [x, y, z] = rot(q);
+        const e = 1 - (1 - Math.min(1, Math.max(0, intro * 1.7 - q.d * .7))) ** 3;
+        return [C + x * RG * e, C + y * RG * e, z, q];
+      }).sort((a, b) => a[2] - b[2]);
+      // atmosfera: um halo suave na borda do globo
+      const atmKey = LO + light + dpr;
+      if (atm.key !== atmKey) {
+        const R2 = Math.ceil(RG * 1.34);
+        atm.cv.width = atm.cv.height = R2 * 2 * dpr;
+        const a = atm.cv.getContext('2d'), gr = a.createRadialGradient(R2 * dpr, R2 * dpr, RG * .86 * dpr, R2 * dpr, R2 * dpr, RG * 1.32 * dpr);
+        gr.addColorStop(0, `rgba(${LO},0)`);
+        gr.addColorStop(.25, `rgba(${LO},${light ? .1 : .16})`);
+        gr.addColorStop(1, `rgba(${LO},0)`);
+        a.fillStyle = gr;
+        a.fillRect(0, 0, atm.cv.width, atm.cv.height);
+        atm.key = atmKey; atm.r = R2;
+      }
+      if (intro > .05) { ctx.globalAlpha = 1; ctx.drawImage(atm.cv, C - atm.r * intro, C - atm.r * intro, atm.r * 2 * intro, atm.r * 2 * intro); }
+      for (const [x, y, z, q] of proj) {
+        const front = (z + 1) / 2;
+        const core = z > 0 ? Math.min(1, Math.hypot(x - C, y - C) / 50) : 1;
+        if (q.land) dot(x, y, 1.3 + 1.3 * front, z > .1 ? HI : LO, (.16 + .8 * front) * core);
+        else dot(x, y, 1 + .5 * front, LO, (.05 + .16 * front) * core);
+      }
+      // arcos de dados entre pontos de terra
+      if (!reduced && t > 1.2 && now > nextArc && arcs.length < 6) {
+        for (let k = 0; k < 12; k++) {
+          const a = land[Math.floor(Math.random() * land.length)], b = land[Math.floor(Math.random() * land.length)];
+          const w = Math.acos(Math.max(-1, Math.min(1, a.x * b.x + a.y * b.y + a.z * b.z)));
+          if (w > .5 && w < 2) { arcs.push({ a, b, w, t0: now, dur: 900 + w * 600 }); break; }
+        }
+        nextArc = now + 380 + Math.random() * 700;
+      }
+      arcs = arcs.filter(arc => (now - arc.t0) / arc.dur < 1.6);
+      for (const arc of arcs) {
+        const u = (now - arc.t0) / arc.dur, head = Math.min(1, u), tail = Math.max(0, u - .5);
+        const lift = .16 + arc.w * .12;
+        const at = s => { const q = slerp(arc.a, arc.b, s), h = 1 + lift * Math.sin(Math.PI * s); return rot({ x: q.x * h, y: q.y * h, z: q.z * h }); };
+        const steps = 22;
+        if (tail < 1) for (let k = 0; k <= steps; k++) {
+          const s = tail + (head - tail) * k / steps, [x, y, z] = at(s);
+          const vis = z > -.15 ? 1 : .3;
+          dot(C + x * RG, C + y * RG, k === steps ? 3.2 : 2, k === steps ? W : HI, (.2 + .8 * k / steps) * vis * (u > 1 ? Math.max(0, 1.5 - u) * 2 : 1));
+        }
+        // ao chegar, um anel de pixels pulsa no destino
+        if (u > 1) {
+          const [x, y, z] = rot(arc.b), r = (u - 1) * 26, a = Math.max(0, 1 - (u - 1) / .6) * (z > 0 ? .8 : .25);
+          for (let k = 0; k < 10; k++) { const an = k / 10 * Math.PI * 2; dot(C + x * RG + Math.cos(an) * r, C + y * RG + Math.sin(an) * r * .6, 1.6, HI, a); }
         }
       }
-      ctx.putImageData(img, 0, 0);
+      // metade da frente da órbita e o satélite com rastro
+      ringPts.forEach(([x, y, z]) => { if (z >= 0) dot(C + x * RG * intro, C + y * RG * intro, 1.7, HI, .42 * intro); });
+      if (intro >= 1) {
+        const sa = now / 1000 * .55;
+        for (let k = 7; k >= 0; k--) {
+          const an = sa - k * .035, [x, y, z] = orbit({ x: Math.cos(an) * 1.42, y: 0, z: Math.sin(an) * 1.42 });
+          dot(C + x * RG, C + y * RG, k ? 2 : 3.4, k ? HI : W, (k ? (1 - k / 8) * .6 : 1) * (z > 0 ? 1 : .35));
+        }
+      }
+      buckets.forEach((path, key) => {
+        const [rgb, a] = key.split('|');
+        ctx.globalAlpha = a / 10;
+        ctx.fillStyle = `rgb(${rgb})`;
+        ctx.fill(path);
+      });
+      ctx.globalAlpha = 1;
     };
     requestAnimationFrame(loop);
   })();

@@ -481,7 +481,7 @@ kbd {
 .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .scroller { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scroll-behavior: auto; }
 .stage.is-empty { justify-content: center; padding-bottom: 7vh; }
-.hero-fx { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; image-rendering: pixelated; }
+.hero-fx { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; }
 .hero h1, .hero-sub { position: relative; text-shadow: 0 1px 18px var(--bg), 0 0 2px var(--bg); }
 .stage:not(.is-empty) .hero-fx { display: none; }
 .stage > .scroller { position: relative; z-index: 1; }
