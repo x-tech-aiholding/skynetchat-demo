@@ -833,6 +833,7 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
     verde: { name: 'Verde', solid: '#16a34a', mid: '#4ade80', pale: '#bbf7d0', deep: '#052e16', shade: '#166534' },
     laranja: { name: 'Laranja', solid: '#ea580c', mid: '#fb923c', pale: '#fed7aa', deep: '#3a1405', shade: '#9a3412' },
     rosa: { name: 'Rosa', solid: '#db2777', mid: '#f472b6', pale: '#fbcfe8', deep: '#3d0a24', shade: '#9d174d' },
+    vermelho: { name: 'Vermelho', solid: '#dc2626', mid: '#f87171', pale: '#fecaca', deep: '#3b0909', shade: '#991b1b' },
   };
   const accentKey = () => ACCENTS[state.prefs.accent] ? state.prefs.accent : 'roxo';
   const currentAccent = () => ACCENTS[accentKey()];
@@ -1303,6 +1304,7 @@ Enquanto isso, teste os atalhos da tela inicial ou escolha outro agente na barra
     stage.classList.add('is-empty');
     // O S se desenha e a saudação sobe a cada conversa nova.
     [$('#hero'), $('.mark-hero')].forEach(el => { el.classList.remove('is-intro'); void el.offsetWidth; el.classList.add('is-intro'); });
+    heroIntroAt = performance.now();
     messagesEl.innerHTML = '';
     greet();
     updatePlaceholder();
@@ -3026,41 +3028,83 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     document.addEventListener('mousedown', () => { clearTimeout(tipT); tip.hidden = true; });
   }
 
-  /* Fundo da tela inicial: uma grade de pixels que cintila, um pulso saindo do S de tempos em tempos
-     e pixels acendendo em roxo perto do cursor. Só desenha com a tela inicial à vista. */
+  /* Fundo da tela inicial: um brilho atrás do S feito de pixels pontilhados (dithering ordenado 4x4).
+     Duas manchas giram devagar e respiram, o brilho se inclina para o cursor e nasce do S a cada conversa nova.
+     O canvas tem só o tamanho do brilho, em resolução 1x ampliada em pixel, e é pintado direto: fica leve. */
+  let heroIntroAt = performance.now();
   (() => {
     const cv = $('#heroFx');
     const ctx = cv.getContext('2d');
-    const t0 = performance.now();
-    let mx = -1e4, my = -1e4;
-    stage.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
-    stage.addEventListener('pointerleave', () => { mx = my = -1e4; });
-    const BASE = { dark: '237,237,239', light: '13,13,16', system: '65,255,120' };
+    const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + .5) / 16);
+    const CELL = 4;
+    let img = null, u32 = null, sizeFor = '', mx = null, my = null, lx = 0, ly = 0, last = 0;
+    stage.addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; });
+    stage.addEventListener('pointerleave', () => { mx = my = null; });
+    const pack = (h, a) => { const [r, g, b] = hexc(h); return (Math.round(a * 255) << 24 | b << 16 | g << 8 | r) >>> 0; };
     const loop = now => {
       requestAnimationFrame(loop);
-      if (!stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden) return;
-      const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
-      if (!W || !H) return;
-      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
-      const theme = getTheme(), base = BASE[theme] || BASE.dark;
-      const hi = theme === 'system' ? '194,255,211' : hexc(theme === 'light' ? currentAccent().solid : currentAccent().mid).join(',');
-      const mark = $(theme === 'system' ? '.hero-retro' : '.mark-hero').getBoundingClientRect(), cr = cv.getBoundingClientRect();
-      const cx = mark.width ? mark.left + mark.width / 2 - cr.left : W / 2, cy = mark.height ? mark.top + mark.height / 2 - cr.top : H * .4;
-      const t = reduced ? 0 : (now - t0) / 1000;
-      const period = 4.5, ph = (t % period) / period, pulseR = ph * Math.max(W, H) * .75, pulseA = (1 - ph) ** 1.5;
-      const G = 22;
-      for (let y = G / 2; y < H; y += G) for (let x = G / 2; x < W; x += G) {
-        const ring = reduced ? 0 : Math.exp(-(((Math.hypot(x - cx, y - cy) - pulseR) / 28) ** 2)) * pulseA;
-        const near = Math.exp(-((x - mx) ** 2 + (y - my) ** 2) / 12800);
-        const tw = Math.max(0, Math.sin(t * .8 + pxHash(x, y) * 30)) ** 12;
-        const glow = Math.min(1, ring * 1.3 + near * 1.2);
-        const a = Math.min(.85, .06 + .1 * tw + .45 * ring + .6 * near);
-        const sz = 2 + glow * 1.6;
-        ctx.fillStyle = `rgba(${glow > .15 ? hi : base},${a})`;
-        ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+      if (!stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden || now - last < 30) return;
+      const dt = Math.min(.1, (now - last) / 1000);
+      last = now;
+      const theme = getTheme(), acc = currentAccent();
+      // No System o terminal fica limpo, sem o brilho por trás do texto.
+      cv.hidden = theme === 'system';
+      if (cv.hidden) return;
+      const Rmax = 150;
+      const W = Math.ceil(Rmax * 4.4 / CELL) * CELL, H = Math.ceil(Rmax * 2.6 / CELL) * CELL;
+      if (sizeFor !== theme) {
+        sizeFor = theme;
+        cv.width = W; cv.height = H;
+        cv.style.width = W + 'px'; cv.style.height = H + 'px';
+        img = ctx.createImageData(W, H); u32 = new Uint32Array(img.data.buffer);
       }
+      const mark = $(theme === 'system' ? '.hero-retro' : '.mark-hero').getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      if (!mark.width) return;
+      const mcx = mark.left + mark.width / 2, mcy = mark.top + mark.height / 2 + (theme === 'system' ? 0 : -4);
+      const ox = Math.round(mcx - sr.left - W / 2), oy = Math.round(mcy - sr.top - H / 2);
+      cv.style.transform = `translate(${ox}px, ${oy}px)`;
+      // o brilho se inclina devagar para o cursor
+      const tx = mx == null ? 0 : Math.max(-60, Math.min(60, (mx - mcx) * .12)), ty = my == null ? 0 : Math.max(-36, Math.min(36, (my - mcy) * .12));
+      lx += (tx - lx) * Math.min(1, dt * 3); ly += (ty - ly) * Math.min(1, dt * 3);
+      const cx = W / 2 + lx, cy = H / 2 + ly;
+      const px = mx == null ? null : mx - sr.left - ox, py = my == null ? null : my - sr.top - oy;
+      const t = reduced ? 1.2 : (now - heroIntroAt) / 1000;
+      const grow = reduced ? 1 : 1 - (1 - Math.min(1, t / 1.3)) ** 3;
+      const R = Rmax * (.25 + .75 * grow);
+      const b1x = cx + Math.cos(t * .42) * 46, b1y = cy + Math.sin(t * .42) * 22;
+      const b2x = cx + Math.cos(t * .31 + 2.6) * 62, b2y = cy + Math.sin(t * .31 + 2.6) * 28;
+      const breathe = .88 + .12 * Math.sin(t * 1.1);
+      const k1 = 1 / (R * R * .55), k2 = 1 / (R * R * .4), kc = 1 / (R * R * 1.6);
+      const cursorOn = mx == null ? 0 : Math.exp(-((mx - mcx) ** 2 + (my - mcy) ** 2) / 90000);
+      // faixa do texto (saudação e subtítulo): o brilho fica bem mais fraco ali para não brigar com a leitura
+      const tr = theme === 'system' ? null : [$('#greeting').getBoundingClientRect(), $('.hero-sub').getBoundingClientRect()];
+      const tTop = tr ? tr[0].top - sr.top - oy - 4 : -1e4, tBot = tr ? tr[1].bottom - sr.top - oy + 6 : -1e4;
+      const [lo, hi] = theme === 'system' ? ['#1fbf55', '#8dffb0'] : theme === 'light' ? [acc.mid, acc.solid] : [acc.solid, acc.pale];
+      const cLo = pack(lo, (theme === 'light' ? .6 : .72) * grow), cHi = pack(hi, (theme === 'light' ? .6 : .7) * grow);
+      u32.fill(0);
+      const cols = W / CELL, rows = H / CELL;
+      for (let gy = 0; gy < rows; gy++) {
+        const y = gy * CELL + CELL / 2, ey1 = (y - b1y) ** 2, ey2 = (y - b2y) ** 2, eyc = (y - cy) ** 2, wy = Math.sin(y * .04 - t * .7);
+        const row = gy * CELL * W, ny = (y - H / 2) / (H / 2);
+        const band = 1 - .72 * Math.min(1, Math.max(0, Math.min(y - tTop, tBot - y) / 14 + .5));
+        for (let gx = 0; gx < cols; gx++) {
+          const x = gx * CELL + CELL / 2, dx = (x - cx) / 1.7;
+          let f = Math.exp(-((x - b1x) ** 2 / 2.6 + ey1) * k1) * .56
+            + Math.exp(-((x - b2x) ** 2 / 2.6 + ey2) * k2) * .44
+            + Math.exp(-(dx * dx + eyc) * kc) * .26;
+          if (f < .03 && !cursorOn) continue;
+          if (cursorOn) f += Math.exp(-((x - px) ** 2 + (y - py) ** 2) / 7000) * .45 * cursorOn;
+          // some antes da borda do quadro, em elipse, para não aparecer canto reto
+          const nx = (x - W / 2) / (W / 2), edge = Math.min(1, Math.max(0, (1 - Math.sqrt(nx * nx + ny * ny)) / .4));
+          f *= breathe * (1 + .08 * Math.sin(x * .03 + t * .9) * wy) * edge * band;
+          const th = BAYER[(gy & 3) * 4 + (gx & 3)];
+          const col = f * .8 > th + .34 ? cHi : f > th + .06 ? cLo : 0;
+          if (!col) continue;
+          const o = row + gx * CELL;
+          for (let k = 0; k < CELL - 1; k++) u32.fill(col, o + k * W, o + k * W + CELL - 1);
+        }
+      }
+      ctx.putImageData(img, 0, 0);
     };
     requestAnimationFrame(loop);
   })();
