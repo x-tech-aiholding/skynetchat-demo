@@ -363,6 +363,158 @@ Antes de escolher, confira se o @ está livre no Instagram e no Spotify.`,
   const saveConvs = () => store.set('skynet-convs', state.convs.filter(c => !c.temp));
   const dropTemp = keep => { state.convs = state.convs.filter(c => !c.temp || c.id === keep); };
 
+  // Mais conversas de exemplo no histórico, com ids fixos: quem já abriu a demo recebe as que faltam uma vez só.
+  const DEMO_HISTORY = () => {
+    const H = 36e5;
+    const conv = (id, title, hoursAgo, msgs, extra = {}) => ({
+      id: 'demo-' + id, title, updated: now - hoursAgo * H, ...extra,
+      messages: msgs.map(([role, text, more]) => role === 'ai' ? { role, text, model: 'Rápido', ...(extra.agent ? { agent: extra.agent } : {}), ...more } : { role, text }),
+    });
+    return [
+      conv('reuniao', 'Resumo da reunião de vendas', 1, [
+        ['user', 'Resume essa reunião em tópicos: falamos da meta de outubro, o Pedro vai fechar o contrato da Lumen até sexta, a Ana precisa revisar a proposta da Vértice e decidimos testar anúncio no TikTok com R$ 2 mil.'],
+        ['ai', `**Resumo da reunião de vendas**
+
+- Meta de outubro em discussão
+- Teste de anúncio no TikTok aprovado, com verba de **R$ 2.000**
+
+**Próximos passos**
+- **Pedro:** fechar o contrato da Lumen até sexta
+- **Ana:** revisar a proposta da Vértice
+- **Time:** definir o público e o criativo do teste no TikTok
+
+Quer que eu transforme isso num e-mail para mandar ao time?`],
+      ]),
+      conv('treino', 'Treino para iniciante', 5, [
+        ['user', 'Monta um treino de academia para iniciante, 3 vezes por semana.'],
+        ['ai', `Um treino de corpo inteiro, para fazer em dias alternados:
+
+## Treino A (segunda e sexta)
+- Agachamento livre: 3 x 12
+- Supino com halteres: 3 x 10
+- Remada baixa: 3 x 12
+- Prancha: 3 x 30 s
+
+## Treino B (quarta)
+- Leg press: 3 x 12
+- Desenvolvimento com halteres: 3 x 10
+- Puxada na frente: 3 x 12
+- Abdominal infra: 3 x 15
+
+Comece com uma carga que permita fazer todas as repetições com boa forma e suba aos poucos. Se tiver alguma lesão, passe por um profissional antes.`],
+      ]),
+      conv('bolo', 'Bolo de cenoura fofinho', 26, [
+        ['user', 'Receita de bolo de cenoura com cobertura de chocolate.'],
+        ['ai', `**Massa**
+- 3 cenouras médias
+- 3 ovos
+- 1 xícara de óleo
+- 2 xícaras de açúcar
+- 2 xícaras de farinha de trigo
+- 1 colher de sopa de fermento
+
+**Cobertura**
+- 4 colheres de sopa de chocolate em pó
+- 2 colheres de sopa de manteiga
+- 1 xícara de açúcar
+- 5 colheres de sopa de leite
+
+**Modo de fazer**
+1. Bata no liquidificador a cenoura, os ovos e o óleo
+2. Misture o açúcar e a farinha, e o fermento por último
+3. Asse a 180 °C por cerca de 40 minutos
+4. Ferva a cobertura até engrossar e jogue no bolo ainda quente`],
+      ], { agent: 'chef' }),
+      conv('procv', 'PROCV dando #N/D', 30, [
+        ['user', 'Meu PROCV está dando #N/D mesmo com o código existindo na outra aba.'],
+        ['ai', `As causas mais comuns, em ordem:
+
+1. **Espaço sobrando:** um dos lados tem espaço no fim. Teste com \`=PROCV(ARRUMAR(A2);Base!A:C;3;0)\`
+2. **Número salvo como texto:** o código aparece igual, mas um é número e o outro é texto. Converta a coluna com Dados, Texto para colunas
+3. **Último argumento:** use **0** ou **FALSO** para busca exata
+4. **Coluna de busca:** o PROCV só procura na primeira coluna do intervalo
+
+Para esconder o erro enquanto ajusta: \`=SEERRO(PROCV(A2;Base!A:C;3;0);"não achei")\``],
+        ['user', 'Era espaço sobrando, funcionou!'],
+        ['ai', `Boa! Se a base vem de outro sistema, vale aplicar o ARRUMAR na coluna inteira uma vez, para não voltar a acontecer.`],
+      ], { agent: 'planilhas' }),
+      conv('vo', 'Mensagem de aniversário para a vó', 70, [
+        ['user', 'Me ajuda com uma mensagem de aniversário para minha vó, que faz 80 anos.'],
+        ['ai', `**Carinhosa**
+Vó, 80 anos de histórias, de café passado na hora e de colo para todo mundo. Obrigado por ser a nossa casa. Feliz aniversário, te amo!
+
+**Curta, para o WhatsApp**
+Feliz 80 anos, vó! Que a gente ainda tenha muitos domingos juntos. ❤️
+
+**Para ler no almoço**
+Hoje a gente comemora a mulher que ensinou essa família a se reunir. Vó, cada um aqui tem um pouco de você. Parabéns pelos 80!`],
+      ]),
+      conv('notebook', 'Notebook para faculdade até R$ 4 mil', 96, [
+        ['user', 'Qual notebook comprar para faculdade até R$ 4 mil? Uso para trabalhos, muitas abas e um pouco de Canva.'],
+        ['ai', `Para esse uso, o que mais pesa é memória e armazenamento rápido:
+
+- **Processador:** Ryzen 5 ou Core i5 das gerações recentes
+- **Memória:** 16 GB, faz mais diferença que o processador com muitas abas abertas
+- **Armazenamento:** SSD de 512 GB
+- **Tela:** IPS Full HD, para não cansar a vista
+- **Bateria:** acima de 6 horas de uso real
+
+Nessa faixa há bons modelos da Lenovo, Acer e Asus. Antes de comprar, confira se a memória pode ser ampliada e leia avaliações sobre a bateria.`, { sources: true, thought: 3, model: 'Pensar' }],
+      ]),
+      conv('gramado', 'Fim de semana em Gramado', 130, [
+        ['user', 'Roteiro de 2 dias em Gramado e Canela.'],
+        ['ai', `**Sábado: Gramado**
+- Manhã no Lago Negro e na Rua Coberta
+- Almoço de fondue ou café colonial
+- Tarde no Mini Mundo
+- Noite passeando pela Avenida Borges de Medeiros
+
+**Domingo: Canela**
+- Cascata do Caracol cedo, antes de encher
+- Catedral de Pedra
+- Parque do Alpen ou Skyglass, se quiser emoção
+
+Em julho e no Natal Luz, reserve hotel e restaurantes com antecedência.`, { sources: true }],
+      ]),
+      conv('carta', 'Carta de apresentação para estágio', 330, [
+        ['user', 'Escreve uma carta de apresentação para estágio em marketing. Estou no 5º semestre de Publicidade.'],
+        ['ai', `Olá, equipe de recrutamento.
+
+Sou estudante do 5º semestre de Publicidade e Propaganda e quero começar minha carreira em marketing numa empresa que valoriza dados e criatividade. Na faculdade, coordenei a comunicação de um projeto de extensão que levou o perfil do Instagram de 300 para 4 mil seguidores em seis meses.
+
+Tenho prática com Canva, Meta Business Suite e planilhas, e aprendo rápido ferramentas novas. Gostaria de contribuir com a produção de conteúdo e a análise de resultados do time.
+
+Fico à disposição para uma conversa.
+
+Atenciosamente,
+[Seu nome]`],
+      ], { agent: 'carreira' }),
+      conv('revolucao', 'Revolução Francesa em 5 minutos', 420, [
+        ['user', 'Me explica a Revolução Francesa de um jeito rápido para a prova.'],
+        ['ai', `**Por que começou (1789)**
+A França estava falida, o povo pagava quase todos os impostos e a nobreza e o clero tinham privilégios.
+
+**Os momentos principais**
+1. **Queda da Bastilha (1789):** símbolo do fim do poder absoluto do rei
+2. **Declaração dos Direitos do Homem:** igualdade perante a lei
+3. **Terror (1793 e 1794):** Robespierre no poder e milhares de execuções
+4. **Napoleão (1799):** um golpe encerra a revolução
+
+**Para lembrar na prova:** liberdade, igualdade e fraternidade, e o fim do Antigo Regime.`],
+      ], { agent: 'professor' }),
+      conv('logo', 'Logo para a hamburgueria', 700, [
+        ['user', 'Logo para uma hamburgueria artesanal chamada Brasa, estilo vintage.'],
+        ['ai', 'Criando 4 variações para **Logo para uma hamburgueria artesanal chamada Brasa, estilo vintage.**', { kind: 'image' }],
+      ]),
+    ];
+  };
+  if (store.get('skynet-demo-chats', 0) < 1) {
+    const have = new Set(state.convs.map(c => c.id));
+    DEMO_HISTORY().forEach(c => { if (!have.has(c.id)) state.convs.push(c); });
+    store.set('skynet-demo-chats', 1);
+    saveConvs();
+  }
+
   // Projetos de exemplo, com conversas próprias (essas não aparecem no histórico da barra lateral).
   // A versão da demo deixa quem já tinha os 4 primeiros receber os 5 novos sem perder nada.
   const svgUri = svg => 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -1122,6 +1274,8 @@ Enquanto isso, teste os atalhos da tela inicial ou escolha outro agente na barra
   }
   function showEmpty() {
     stage.classList.add('is-empty');
+    // O S se desenha e a saudação sobe a cada conversa nova.
+    [$('#hero'), $('.mark-hero')].forEach(el => { el.classList.remove('is-intro'); void el.offsetWidth; el.classList.add('is-intro'); });
     messagesEl.innerHTML = '';
     greet();
     updatePlaceholder();
@@ -1624,7 +1778,7 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
   /* ---------------- Orbe da voz ---------------- */
   // Esfera em WebGL: respira sozinha e cresce, acelera e brilha com o volume da fala.
   const ORB_FS = `precision highp float;
-uniform vec2 uRes;uniform float uTime,uFlow,uLevel;uniform vec3 uA,uB,uC;
+uniform vec2 uRes;uniform float uTime,uFlow,uLevel,uRingT,uRingA;uniform float uBand[6];uniform vec3 uA,uB,uC;
 float h(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
 float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
 return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
@@ -1633,7 +1787,8 @@ float fbm(vec3 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.03+vec3(
 void main(){
 vec2 uv=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);
 float L=uLevel,r=length(uv),an=atan(uv.y,uv.x);
-float e=.27+.035*L+(fbm(vec3(cos(an)*1.3,sin(an)*1.3,uTime*.3+uFlow*.4))-.5)*(.03+.06*L);
+float dsp=0.;for(int i=0;i<6;i++){float fi=float(i);dsp+=uBand[i]*sin(an*(fi+2.)+uTime*(1.1+fi*.37)+fi*1.9);}
+float e=.26+.045*L+(fbm(vec3(cos(an)*1.3,sin(an)*1.3,uTime*.3+uFlow*.4))-.5)*(.03+.05*L)+dsp*.016;
 float d=r-e;
 vec2 p=uv/e;
 float z=sqrt(max(0.,1.-dot(p,p)));
@@ -1652,20 +1807,22 @@ col+=pow(max(dot(reflect(-lg,nr),vec3(0,0,1)),0.),28.)*.3;
 col*=1.+.3*L;
 float px=1.5/min(uRes.x,uRes.y);
 float inside=1.-smoothstep(-px,px,d);
-float halo=exp(-max(d,0.)*(13.-4.*L))*(.2+.35*L)*(1.-inside)*(1.-smoothstep(.36,.49,r));
-gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
+float fade=1.-smoothstep(.36,.49,r);
+float halo=exp(-max(d,0.)*(13.-4.*L))*(.2+.35*L)*(1.-inside)*fade;
+float ring=uRingA*(1.-uRingT)*exp(-abs(d-.015-uRingT*.17)*85.)*(1.-inside)*fade;
+gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
 }`;
   const ORB_COLORS = {
     dark: [[.17, .05, .45], [.55, .34, .97], [.92, .76, 1]],
     light: [[.33, .12, .7], [.6, .4, .98], [.93, .8, 1]],
     system: [[.01, .16, .05], [.15, .75, .33], [.76, 1, .83]],
   };
-  const orb = { raf: 0, gl: null, ctx: null, cv: null, u: null, mic: null, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: 0, last: 0 };
+  const orb = { raf: 0, gl: null, ctx: null, cv: null, u: null, mic: null, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: 0, last: 0, bands: new Float32Array(6), ringT: 1, ringA: 0, prev: 0 };
 
   function orbStart(host) {
     const cv = document.createElement('canvas');
     host.replaceChildren(cv);
-    Object.assign(orb, { cv, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: performance.now(), last: performance.now() });
+    Object.assign(orb, { cv, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: performance.now(), last: performance.now(), bands: new Float32Array(6), ringT: 1, ringA: 0, prev: 0 });
     orb.gl = orbGL(cv);
     orb.ctx = orb.gl ? null : cv.getContext('2d');
     const loop = now => { orbFrame(now); orb.raf = requestAnimationFrame(loop); };
@@ -1690,7 +1847,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     const loc = gl.getAttribLocation(pr, 'p');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    orb.u = Object.fromEntries(['uRes', 'uTime', 'uFlow', 'uLevel', 'uA', 'uB', 'uC'].map(n => [n, gl.getUniformLocation(pr, n)]));
+    orb.u = Object.fromEntries(['uRes', 'uTime', 'uFlow', 'uLevel', 'uRingT', 'uRingA', 'uBand', 'uA', 'uB', 'uC'].map(n => [n, gl.getUniformLocation(pr, n)]));
     const [a, b, c] = ORB_COLORS[getTheme()] || ORB_COLORS.dark;
     gl.uniform3fv(orb.u.uA, a);
     gl.uniform3fv(orb.u.uB, b);
@@ -1704,16 +1861,32 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     const dt = Math.min(.05, (now - orb.last) / 1000);
     orb.last = now;
     // Volume em decibéis (de -55 a -18 dB vira 0 a 1), suavizado duas vezes: a orbe incha e desincha, sem tranco.
+    const ease = rate => 1 - Math.exp(-dt * rate);
+    // Faixas da voz (de ~90 Hz a ~4 kHz, em escala de oitavas): cada uma empurra a borda num ritmo próprio.
+    const raw = new Float32Array(6);
     if (orb.mic) {
-      const b = orb.mic.buf;
+      const b = orb.mic.buf, f = orb.mic.freq;
       orb.mic.an.getByteTimeDomainData(b);
+      orb.mic.an.getByteFrequencyData(f);
       let s = 0;
       for (let i = 0; i < b.length; i++) { const x = (b[i] - 128) / 128; s += x * x; }
       const db = 20 * Math.log10(Math.sqrt(s / b.length) + 1e-6);
       orb.target = Math.min(1, Math.max(0, (db + 55) / 37));
-    } else if (orb.speaking) orb.target = .35 + .25 * (.5 + .5 * Math.sin(t * 5.3) * Math.sin(t * 2.1));
-    else orb.target = 0;
-    const ease = rate => 1 - Math.exp(-dt * rate);
+      const EDGES = [2, 4, 7, 12, 20, 34, 86];
+      for (let k = 0; k < 6; k++) {
+        let sum = 0;
+        for (let i = EDGES[k]; i < EDGES[k + 1]; i++) sum += f[i];
+        raw[k] = Math.min(1, Math.max(0, (sum / (EDGES[k + 1] - EDGES[k]) / 255 - .28) / .5));
+      }
+    } else if (orb.speaking) {
+      orb.target = .35 + .25 * (.5 + .5 * Math.sin(t * 5.3) * Math.sin(t * 2.1));
+      for (let k = 0; k < 6; k++) raw[k] = orb.target * (.55 + .45 * Math.sin(t * (3.1 + k * 1.7) + k * 2.3));
+    } else orb.target = 0;
+    for (let k = 0; k < 6; k++) orb.bands[k] += (raw[k] - orb.bands[k]) * ease(raw[k] > orb.bands[k] ? 16 : 5);
+    // sílaba forte: o volume sobe de repente e solta um anel
+    if (orb.target - orb.prev > .16 && orb.ringT > .35) { orb.ringT = 0; orb.ringA = Math.min(1, .45 + orb.target); }
+    orb.prev += (orb.target - orb.prev) * ease(8);
+    orb.ringT = Math.min(1, orb.ringT + dt / 1.1);
     orb.smooth += (orb.target - orb.smooth) * ease(orb.target > orb.smooth ? 9 : 3.5);
     orb.level += (orb.smooth - orb.level) * ease(5);
     orb.flow += dt * (.16 + .45 * orb.level);
@@ -1729,6 +1902,9 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       gl.uniform1f(orb.u.uTime, t);
       gl.uniform1f(orb.u.uFlow, orb.flow);
       gl.uniform1f(orb.u.uLevel, orb.level);
+      gl.uniform1fv(orb.u.uBand, orb.bands);
+      gl.uniform1f(orb.u.uRingT, orb.ringT);
+      gl.uniform1f(orb.u.uRingA, orb.ringA);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     } else if (orb.ctx) {
@@ -1756,7 +1932,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       const an = ctx.createAnalyser();
       an.fftSize = 1024;
       ctx.createMediaStreamSource(stream).connect(an);
-      orb.mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize) };
+      an.smoothingTimeConstant = .55;
+      orb.mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize), freq: new Uint8Array(an.frequencyBinCount) };
     } catch (e) {}
   }
 
@@ -1875,16 +2052,13 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     ['i-check', '4.5 Pro e modo Pensar'],
     ['i-check', 'Geração de imagens'],
     ['i-check', 'Pesquisa na web ilimitada'],
-    ['i-check', 'Memória que lembra de você'],
     ['i-check', 'Leitura de PDF, planilha e foto'],
-    ['i-check', 'Os 15 agentes especialistas'],
     ['i-check', 'Grupos com até 10 pessoas'],
     ['i-check', 'Prioridade no horário de pico'],
     ['i-check', 'Suporte prioritário'],
     ['i-check', 'Projetos sem limite'],
     ['i-check', 'Acesso antecipado ao Coder'],
     ['i-lock', 'Conversas criptografadas'],
-    ['i-lock', 'Seus dados não treinam a IA'],
   ];
   const perkList = list => `<ul class="plan-list">${list.map(([ic, t]) => `<li>${icon(ic)}<span>${t}</span></li>`).join('')}</ul>`;
 
@@ -2834,6 +3008,44 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     });
     document.addEventListener('mousedown', () => { clearTimeout(tipT); tip.hidden = true; });
   }
+
+  /* Fundo da tela inicial: uma grade de pixels que cintila, um pulso saindo do S de tempos em tempos
+     e pixels acendendo em roxo perto do cursor. Só desenha com a tela inicial à vista. */
+  (() => {
+    const cv = $('#heroFx');
+    const ctx = cv.getContext('2d');
+    const t0 = performance.now();
+    let mx = -1e4, my = -1e4;
+    stage.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+    stage.addEventListener('pointerleave', () => { mx = my = -1e4; });
+    const COLORS = { dark: ['237,237,239', '167,139,250'], light: ['13,13,16', '124,58,237'], system: ['65,255,120', '194,255,211'] };
+    const loop = now => {
+      requestAnimationFrame(loop);
+      if (!stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden) return;
+      const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+      if (!W || !H) return;
+      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const theme = getTheme(), [base, hi] = COLORS[theme] || COLORS.dark;
+      const mark = $(theme === 'system' ? '.hero-retro' : '.mark-hero').getBoundingClientRect(), cr = cv.getBoundingClientRect();
+      const cx = mark.width ? mark.left + mark.width / 2 - cr.left : W / 2, cy = mark.height ? mark.top + mark.height / 2 - cr.top : H * .4;
+      const t = reduced ? 0 : (now - t0) / 1000;
+      const period = 4.5, ph = (t % period) / period, pulseR = ph * Math.max(W, H) * .75, pulseA = (1 - ph) ** 1.5;
+      const G = 22;
+      for (let y = G / 2; y < H; y += G) for (let x = G / 2; x < W; x += G) {
+        const ring = reduced ? 0 : Math.exp(-(((Math.hypot(x - cx, y - cy) - pulseR) / 28) ** 2)) * pulseA;
+        const near = Math.exp(-((x - mx) ** 2 + (y - my) ** 2) / 12800);
+        const tw = Math.max(0, Math.sin(t * .8 + pxHash(x, y) * 30)) ** 12;
+        const glow = Math.min(1, ring * 1.3 + near * 1.2);
+        const a = Math.min(.85, .06 + .1 * tw + .45 * ring + .6 * near);
+        const sz = 2 + glow * 1.6;
+        ctx.fillStyle = `rgba(${glow > .15 ? hi : base},${a})`;
+        ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+      }
+    };
+    requestAnimationFrame(loop);
+  })();
 
   /* ---------------- Barra lateral ---------------- */
   // Rolando o histórico, os atalhos de cima recolhem e viram uma fileira de ícones, com os mesmos data-* dos itens.
