@@ -1881,6 +1881,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     ['i-check', 'Grupos com até 10 pessoas'],
     ['i-check', 'Prioridade no horário de pico'],
     ['i-check', 'Suporte prioritário'],
+    ['i-check', 'Projetos sem limite'],
+    ['i-check', 'Acesso antecipado ao Coder'],
     ['i-lock', 'Conversas criptografadas'],
     ['i-lock', 'Seus dados não treinam a IA'],
   ];
@@ -2582,70 +2584,98 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
   function touchProject(p) { p.updated = Date.now(); saveProjects(); }
 
   /* Projetos: segurar e arrastar muda a ordem. No mouse o arraste começa ao mover; no toque, depois de segurar um instante.
-     Os outros cards deslizam para o lugar novo (FLIP) e a ordem fica salva. */
+     O card vai para o espaço cujo centro está mais perto do centro dele (assim não fica trocando de lugar sem parar),
+     um contorno tracejado mostra onde ele vai cair, os outros deslizam (FLIP) e a página rola sozinha perto das bordas. */
   let pjDrag = null, pjSuppressClick = false;
   const pjCards = () => $$('#pjGrid .pj-card[data-proj]');
-  const pjPos = el => ({ x: el.offsetLeft, y: el.offsetTop });
-  function startPjDrag(e) {
+  function startPjDrag() {
     const d = pjDrag;
     if (!d || d.on) return;
-    d.on = true;
     const grid = $('#pjGrid'), r = d.card.getBoundingClientRect();
+    d.on = true;
     d.offX = d.x0 - r.left;
     d.offY = d.y0 - r.top;
+    d.slot = Object.assign(document.createElement('div'), { className: 'pj-slot' });
+    grid.appendChild(d.slot);
     grid.classList.add('is-sorting');
+    d.card.classList.remove('is-pressing');
     d.card.classList.add('is-dragging');
-    movePjDrag(e);
+    document.body.classList.add('is-grabbing');
+    navigator.vibrate?.(8);
+    d.raf = requestAnimationFrame(pjFrame);
   }
-  function movePjDrag(e) {
-    const d = pjDrag, grid = $('#pjGrid'), g = grid.getBoundingClientRect();
-    const place = () => { d.card.style.transform = `translate(${e.clientX - d.offX - (g.left + d.card.offsetLeft)}px, ${e.clientY - d.offY - (g.top + d.card.offsetTop)}px)`; };
-    const over = pjCards().find(c => c !== d.card && (() => { const x = e.clientX - g.left, y = e.clientY - g.top; return x > c.offsetLeft && x < c.offsetLeft + c.offsetWidth && y > c.offsetTop && y < c.offsetTop + c.offsetHeight; })());
-    if (over) {
-      const cards = pjCards(), before = new Map(cards.map(c => [c, pjPos(c)]));
-      const from = cards.indexOf(d.card), to = cards.indexOf(over);
-      grid.insertBefore(d.card, from < to ? over.nextSibling : over);
+  function pjFrame() {
+    const d = pjDrag;
+    if (!d || !d.on) return;
+    const grid = $('#pjGrid');
+    // rolagem automática: quanto mais perto da borda, mais rápido
+    const pr = pageEl.getBoundingClientRect(), edge = 90;
+    if (d.y < pr.top + edge) pageEl.scrollTop -= Math.ceil((pr.top + edge - d.y) / 5);
+    else if (d.y > pr.bottom - edge) pageEl.scrollTop += Math.ceil((d.y - (pr.bottom - edge)) / 5);
+    const g = grid.getBoundingClientRect();
+    const left = d.x - g.left - d.offX, top = d.y - g.top - d.offY;
+    const cx = left + d.card.offsetWidth / 2, cy = top + d.card.offsetHeight / 2;
+    const cards = pjCards();
+    let to = 0, best = Infinity;
+    cards.forEach((c, i) => {
+      const dist = (c.offsetLeft + c.offsetWidth / 2 - cx) ** 2 + (c.offsetTop + c.offsetHeight / 2 - cy) ** 2;
+      if (dist < best) { best = dist; to = i; }
+    });
+    const from = cards.indexOf(d.card);
+    if (to !== from) {
+      const before = new Map(cards.map(c => [c, [c.offsetLeft, c.offsetTop]]));
+      grid.insertBefore(d.card, to > from ? cards[to].nextSibling : cards[to]);
       cards.forEach(c => {
         if (c === d.card) return;
-        const a = before.get(c), b = pjPos(c);
-        if (a.x === b.x && a.y === b.y) return;
+        const [ax, ay] = before.get(c), dx = ax - c.offsetLeft, dy = ay - c.offsetTop;
+        if (!dx && !dy) return;
         c.style.transition = 'none';
-        c.style.transform = `translate(${a.x - b.x}px, ${a.y - b.y}px)`;
-        requestAnimationFrame(() => { c.style.transition = ''; c.style.transform = ''; });
+        c.style.transform = `translate(${dx}px, ${dy}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = ''; c.style.transform = ''; }));
       });
     }
-    place();
+    d.slot.style.width = d.card.offsetWidth + 'px';
+    d.slot.style.height = d.card.offsetHeight + 'px';
+    d.slot.style.transform = `translate(${d.card.offsetLeft}px, ${d.card.offsetTop}px)`;
+    d.card.style.transform = `translate(${left - d.card.offsetLeft}px, ${top - d.card.offsetTop}px)`;
+    d.raf = requestAnimationFrame(pjFrame);
   }
   function endPjDrag() {
     const d = pjDrag;
     pjDrag = null;
     if (!d) return;
     clearTimeout(d.timer);
+    d.card.classList.remove('is-pressing');
     if (!d.on) return;
+    cancelAnimationFrame(d.raf);
     pjSuppressClick = true;
     setTimeout(() => { pjSuppressClick = false; }, 0);
-    d.card.classList.remove('is-dragging');
+    // solta: o card desliza para o espaço tracejado, por cima dos outros até assentar
+    d.card.classList.replace('is-dragging', 'is-settling');
     d.card.style.transform = '';
-    $('#pjGrid')?.classList.remove('is-sorting');
+    d.slot.remove();
+    document.body.classList.remove('is-grabbing');
+    setTimeout(() => { d.card.classList.remove('is-settling'); $('#pjGrid')?.classList.remove('is-sorting'); }, 280);
     const ids = pjCards().map(c => c.dataset.proj);
     state.projects = [...ids.map(projectById), ...state.projects.filter(x => !ids.includes(x.id))];
     saveProjects();
   }
   document.addEventListener('pointerdown', e => {
     const card = e.target.closest('#pjGrid .pj-card[data-proj]');
-    if (!card || e.button !== 0 || $('#projSearch')?.value.trim()) return;
-    pjDrag = { card, x0: e.clientX, y0: e.clientY, on: false, timer: e.pointerType === 'mouse' ? 0 : setTimeout(() => startPjDrag(e), 280) };
+    if (!card || e.button !== 0 || pjDrag || $('#projSearch')?.value.trim()) return;
+    const touch = e.pointerType !== 'mouse';
+    pjDrag = { card, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, timer: touch ? setTimeout(startPjDrag, 300) : 0 };
+    if (touch) card.classList.add('is-pressing');
   });
   document.addEventListener('pointermove', e => {
-    if (!pjDrag) return;
-    if (!pjDrag.on) {
-      if (Math.hypot(e.clientX - pjDrag.x0, e.clientY - pjDrag.y0) > 6) {
-        if (e.pointerType === 'mouse') startPjDrag(e);
-        else { clearTimeout(pjDrag.timer); pjDrag = null; }
-      }
-      return;
+    const d = pjDrag;
+    if (!d) return;
+    d.x = e.clientX;
+    d.y = e.clientY;
+    if (!d.on && Math.hypot(d.x - d.x0, d.y - d.y0) > 6) {
+      if (e.pointerType === 'mouse') startPjDrag();
+      else { clearTimeout(d.timer); d.card.classList.remove('is-pressing'); pjDrag = null; }
     }
-    movePjDrag(e);
   });
   document.addEventListener('pointerup', endPjDrag);
   document.addEventListener('pointercancel', endPjDrag);
@@ -2804,9 +2834,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
 
   /* ---------------- Barra lateral ---------------- */
   // Rolando o histórico, os atalhos de cima recolhem e viram uma fileira de ícones, com os mesmos data-* dos itens.
-  // Só recolhe quando ainda sobra rolagem depois de recolher, para não ficar abrindo e fechando.
   (() => {
-    const sb = $('#sidebar'), fold = $('.sb-fold'), mini = $('#sbMini');
+    const sb = $('#sidebar'), mini = $('#sbMini');
     $$('.sb-nav .sb-item').forEach(b => {
       const m = document.createElement('button');
       for (const at of b.attributes) if (at.name !== 'class') m.setAttribute(at.name, at.value);
@@ -2817,10 +2846,33 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       m.innerHTML = b.querySelector('svg').outerHTML;
       mini.appendChild(m);
     });
+    // Segue a intenção de quem rola: para baixo recolhe (basta o histórico ter rolagem), para cima no topo volta.
+    // Logo depois de recolher, o histórico cresce e a rolagem pode voltar ao zero sozinha; essa volta é ignorada.
+    let lockUntil = 0, lastY = 0, touchY = null;
+    const compact = on => {
+      if (on === sb.classList.contains('is-compact')) return;
+      sb.classList.toggle('is-compact', on);
+      lockUntil = performance.now() + 450;
+    };
+    const overflow = () => historyEl.scrollHeight - historyEl.clientHeight > 4;
+    historyEl.addEventListener('wheel', e => {
+      if (e.deltaY > 2 && overflow()) compact(true);
+      else if (e.deltaY < -2 && historyEl.scrollTop <= 0) compact(false);
+    }, { passive: true });
     historyEl.addEventListener('scroll', () => {
-      const y = historyEl.scrollTop, compact = sb.classList.contains('is-compact');
-      if (!compact && y > 24 && historyEl.scrollHeight - historyEl.clientHeight > fold.offsetHeight + 40) sb.classList.add('is-compact');
-      else if (compact && y < 4) sb.classList.remove('is-compact');
+      const y = historyEl.scrollTop;
+      if (performance.now() > lockUntil) {
+        if (y > 24) compact(true);
+        else if (y <= 0 && lastY > 0) compact(false);
+      }
+      lastY = y;
+    }, { passive: true });
+    historyEl.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+    historyEl.addEventListener('touchmove', e => {
+      if (touchY == null) return;
+      const dy = e.touches[0].clientY - touchY;
+      if (dy < -12 && overflow()) { compact(true); touchY = null; }
+      else if (dy > 18 && historyEl.scrollTop <= 0) { compact(false); touchY = null; }
     }, { passive: true });
   })();
   function toggleSidebar() {
