@@ -1595,15 +1595,17 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
     transform: translateX(-102%);
     transition: transform .3s var(--ease);
     z-index: 70;
+    background: var(--bg);
   }
-  .app.drawer-open .sidebar { transform: none; box-shadow: var(--shadow-pop); }
+  .app.drawer-open .sidebar { transform: none; box-shadow: 16px 0 44px -12px rgba(0, 0, 0, .45); }
   .app.drawer-open .scrim { display: block; position: fixed; inset: 0; z-index: 65; background: var(--scrim); animation: fade .2s ease; }
   .sb-head [data-action="toggle-sidebar"] { display: none; }
   .app .tb-open, .app.sb-collapsed .tb-open { display: none; }
   .tb-drawer { display: inline-grid; }
-  .topbar { padding: 0 8px; }
+  .topbar { padding: 0 8px; position: relative; }
   .tb-left { flex: 1; }
-  .model-btn { margin: 0 auto; }
+  .model-btn { position: absolute; left: 50%; transform: translateX(-50%); margin: 0; max-width: calc(100vw - 150px); }
+  .model-btn .model-name, .model-btn .model-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tb-right [data-action="share"], .tb-login { display: none; }
   .temp-pill { width: 34px; height: 34px; padding: 0; margin: 0; justify-content: center; }
   .temp-pill span { display: none; }
