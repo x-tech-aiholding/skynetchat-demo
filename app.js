@@ -2103,7 +2103,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       <div class="pr-head"><div class="m-icon px-icon"><canvas id="pxSupport" aria-hidden="true"></canvas></div><div><h2 class="m-title">Suporte <span class="sup-sla"><i></i>Responde em até 24 h</span></h2><p class="m-sub">Conta o que aconteceu e a gente responde no seu e-mail.</p></div></div>
       <form class="m-stack sup" id="supportForm">
         <div class="field"><span>Sobre o que é?</span>
-          <div class="sup-topics" role="radiogroup" aria-label="Assunto">${SUPPORT_TOPICS.map(([k, ic, l], i) => `<button type="button" role="radio" data-topic="${k}" aria-checked="${i === 0}"><span class="sup-ico">${icon(ic)}</span><span>${l}</span></button>`).join('')}</div>
+          <div class="sup-topics" role="radiogroup" aria-label="Assunto">${SUPPORT_TOPICS.map(([k, ic, l], i) => `<button type="button" role="radio" data-topic="${k}" aria-checked="${i === 0}" class="prompt-tab">${l}</button>`).join('')}</div>
         </div>
         <label class="field"><span>Seu e-mail</span><input type="email" name="email" required placeholder="voce@email.com" autocomplete="email" value="${esc((state.user && state.user.email) || '')}" /></label>
         <label class="field"><span>Mensagem</span><textarea name="msg" id="supMsg" required placeholder="${SUPPORT_TOPICS[0][3]}"></textarea></label>
@@ -2210,10 +2210,10 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     ['outro', 'i-dots', 'Outro assunto', 'Descreva sua dúvida.'],
   ];
   const SUPPORT_FAQ = [
-    ['Como cancelo o Pro?', 'Em Configurações, no seu plano. O Pro continua até o fim do mês que você já pagou e não tem multa.'],
     ['Minhas conversas sumiram', 'Sem login, elas ficam só neste navegador. Limpar os dados do navegador ou usar o modo sem histórico apaga tudo.'],
     ['O limite do Free renova quando?', 'Todo dia à meia-noite, no horário de Brasília. São 5 mensagens por dia.'],
     ['Meus dados treinam a IA?', 'Não. Suas conversas não são usadas para treinar o modelo.'],
+    ['Como cancelo o Pro?', 'Em Configurações, no seu plano. O Pro continua até o fim do mês que você já pagou e não tem multa.'],
   ];
 
   let promptCat = Object.keys(PROMPTS)[0];
