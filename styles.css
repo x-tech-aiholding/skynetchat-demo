@@ -566,14 +566,15 @@ kbd {
   transition: background .15s, color .15s, border-color .15s;
 }
 .tool-btn .i { width: 17px; height: 17px; }
-.tool-btn:hover { background: var(--surface-2); color: var(--fg); }
+@media (hover: hover) { .tool-btn:hover { background: var(--surface-2); color: var(--fg); } }
 .tool-round { width: 34px; padding: 0; justify-content: center; }
 .tool-btn.toggle { position: relative; overflow: hidden; isolation: isolate; transition: background .2s, color .2s, border-color .2s, transform .18s var(--ease); }
 .tool-btn.toggle > :not(canvas) { position: relative; z-index: 1; }
 .px-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; color: currentColor; }
 .tool-btn.toggle:active { transform: scale(.95); }
-.tool-btn.toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
-.tool-btn.toggle[aria-pressed="true"]:hover { background: var(--accent-soft-2); color: var(--accent); }
+/* Ligado, o botão não ganha cor própria: quem mostra o estado são os pixels, na cor de destaque */
+.tool-btn.toggle[aria-pressed="true"] { color: var(--fg); }
+.tool-btn.toggle .px-fx { color: var(--accent); }
 /* Partes animadas dos ícones: o globo gira, a lâmpada acende */
 .tool-btn .i { overflow: visible; }
 .tool-btn .t-fill { fill: currentColor; fill-opacity: 0; transition: fill-opacity .25s; }
@@ -1483,7 +1484,6 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
 [data-theme="system"] #input { font-size: var(--fs-lg); text-shadow: var(--glow); caret-color: var(--fg); line-height: 1.3; }
 [data-theme="system"] #input::placeholder { color: var(--fg-3); text-transform: uppercase; }
 [data-theme="system"] .tool-btn { font-size: var(--fs-sm); text-transform: uppercase; border-color: var(--line); }
-[data-theme="system"] .tool-btn.toggle[aria-pressed="true"] { background: var(--fg); color: var(--bg); text-shadow: none; border-color: var(--fg); }
 [data-theme="system"] .send { width: auto; padding: 0 12px; height: 34px; border-radius: 0; text-shadow: none; box-shadow: var(--glow); }
 [data-theme="system"] .send .i { display: none !important; }
 [data-theme="system"] .retro-label { display: block; font-size: 20px; line-height: 1; }
@@ -1684,12 +1684,20 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
   /* Toggles: só ícone; ao ativar, expande com o texto */
   .tool-btn.toggle span { display: none; }
   .tool-btn.toggle { width: 34px; padding: 0; justify-content: center; }
-  .tool-btn.toggle[aria-pressed="true"] { width: auto; padding: 0 12px 0 10px; }
+  .tool-btn.toggle[aria-pressed="true"] { width: auto; padding: 0 10px 0 8px; gap: 5px; }
   .tool-btn.toggle[aria-pressed="true"] span { display: inline; }
+  /* Nenhum botão da linha encolhe (o + e o enviar ficavam espremidos); quem cede espaço é o nome dos toggles (JS fitTools) */
+  .tools-left > *, .tools-right > * { flex: none; }
+  .tools-left { flex: 1; }
+  .tool-btn.toggle.is-short { width: 34px; padding: 0; }
+  .tool-btn.toggle.is-short span { display: none; }
+  .composer.is-tight .effort-btn .eff-name { display: none; }
   [data-theme="system"] .tool-btn.toggle span { display: none; }
   [data-theme="system"] .tool-btn.toggle[aria-pressed="true"] span { display: inline; }
+  [data-theme="system"] .tool-btn.toggle.is-short span { display: none; }
   .effort-btn .eff-v { display: none; }
-  .composer-tools { gap: 6px; }
+  .composer-tools { gap: 4px; }
+  .effort-btn { padding: 0 6px 0 10px; }
   .tools-left, .tools-right { gap: 4px; min-width: 0; }
   .tools-left { overflow: hidden; }
   .msg.user .bubble { max-width: 88%; }

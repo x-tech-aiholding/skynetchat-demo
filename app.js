@@ -3158,6 +3158,19 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
   const openDrawer = () => app.classList.add('drawer-open');
   const closeDrawer = () => app.classList.remove('drawer-open');
 
+  // No celular, Pesquisa e Pensar ligados mostram o nome. Se não couber na linha (tela estreita, fonte larga do System),
+  // o outro toggle volta a só ícone primeiro, depois o último tocado; os pixels continuam mostrando que estão ligados.
+  // Se nem assim couber, o nome do esforço some e fica a seta.
+  function fitTools(last) {
+    const row = $('.tools-left'), over = () => row.scrollWidth > row.clientWidth + 1;
+    const pressed = $$('.tool-btn.toggle[aria-pressed="true"]', composer).sort((a, b) => (a === last) - (b === last));
+    $$('.tool-btn.toggle', composer).forEach(b => b.classList.remove('is-short'));
+    composer.classList.remove('is-tight');
+    for (const b of pressed) { if (!over()) break; b.classList.add('is-short'); }
+    if (over()) composer.classList.add('is-tight');
+  }
+  window.addEventListener('resize', () => fitTools());
+
   /* Pixels dos toggles Pesquisa e Pensar */
   const toolFx = new Map();
   function toolPixels(btn, on, e) {
@@ -3266,6 +3279,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       const k = tool.dataset.tool;
       state.tools[k] = !state.tools[k];
       tool.setAttribute('aria-pressed', String(state.tools[k]));
+      fitTools(tool);
       toolPixels(tool, state.tools[k], e);
       return;
     }
