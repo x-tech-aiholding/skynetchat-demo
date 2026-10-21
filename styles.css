@@ -997,7 +997,7 @@ kbd {
 }
 .ag-row:hover { background: var(--surface-2); }
 .ag-row:hover .eye { animation: agblink .45s ease; }
-.ag-row.is-on { background: var(--accent-soft); }
+.ag-row.is-on { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-strong); }
 .ag-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ag-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .ag-name b { font-weight: 600; font-size: var(--fs); letter-spacing: -.01em; white-space: nowrap; }
