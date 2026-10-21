@@ -316,7 +316,7 @@ kbd {
 
 .sb-primary, .sb-nav { padding: 2px 8px; display: flex; flex-direction: column; gap: 1px; }
 .sb-nav { padding-top: 12px; }
-.sb-refer { padding: 1px 8px 0; }
+.sb-refer { padding: 1px 8px 0; display: flex; flex-direction: column; }
 
 .sb-item {
   display: flex; align-items: center; gap: 11px;
