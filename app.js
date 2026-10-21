@@ -3069,16 +3069,14 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     });
     // Segue a intenção de quem rola: para baixo recolhe (basta o histórico ter rolagem), para cima no topo volta.
     // Logo depois de recolher, o histórico cresce e a rolagem pode voltar ao zero sozinha; essa volta é ignorada.
-    let lockUntil = 0, lastY = 0, touchY = null;
-    // O recolher é só do desktop: no celular a barra é gaveta e isso brigava com o scroll de toque.
-    const canCompact = () => !matchMedia('(max-width: 860px)').matches;
+    // Recolhe pelo scroll (desktop e mobile): desceu com rolagem disponível, recolhe; voltou ao topo, abre.
+    // Depois de recolher, o histórico cresce e o scrollTop pode cair sozinho a zero; esse rebote é ignorado pelo lock.
+    let lockUntil = 0, lastY = 0;
     const compact = on => {
-      if (!canCompact()) on = false;
       if (on === sb.classList.contains('is-compact')) return;
       sb.classList.toggle('is-compact', on);
-      lockUntil = performance.now() + 450;
+      lockUntil = performance.now() + 500;
     };
-    window.addEventListener('resize', () => { if (!canCompact()) sb.classList.remove('is-compact'); });
     const overflow = () => historyEl.scrollHeight - historyEl.clientHeight > 4;
     historyEl.addEventListener('wheel', e => {
       if (e.deltaY > 2 && overflow()) compact(true);
@@ -3087,8 +3085,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     historyEl.addEventListener('scroll', () => {
       const y = historyEl.scrollTop;
       if (performance.now() > lockUntil) {
-        if (y > 24) compact(true);
-        else if (y <= 0 && lastY > 0) compact(false);
+        if (y > 36 && y > lastY && overflow()) compact(true);
+        else if (y <= 0) compact(false);
       }
       lastY = y;
     }, { passive: true });

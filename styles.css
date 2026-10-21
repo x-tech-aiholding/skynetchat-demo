@@ -1597,7 +1597,7 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
     z-index: 70;
     background: var(--bg);
   }
-  .app.drawer-open .sidebar { transform: none; box-shadow: 16px 0 44px -12px rgba(0, 0, 0, .45); }
+  .app.drawer-open .sidebar { transform: none; box-shadow: 1px 0 0 var(--line-strong); }
   .app.drawer-open .scrim { display: block; position: fixed; inset: 0; z-index: 65; background: var(--scrim); animation: fade .2s ease; }
   .sb-head [data-action="toggle-sidebar"] { display: none; }
   .app .tb-open, .app.sb-collapsed .tb-open { display: none; }
@@ -1665,12 +1665,24 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
   .pr-new { width: 44px; padding: 0; }
   .code-field { font-size: 21px; letter-spacing: .14em; height: 54px; }
   .gs-code { font-size: 30px; }
+  /* Toggles: só ícone; ao ativar, expande com o texto */
   .tool-btn.toggle span { display: none; }
   .tool-btn.toggle { width: 34px; padding: 0; justify-content: center; }
+  .tool-btn.toggle[aria-pressed="true"] { width: auto; padding: 0 12px 0 10px; }
+  .tool-btn.toggle[aria-pressed="true"] span { display: inline; }
   [data-theme="system"] .tool-btn.toggle span { display: none; }
+  [data-theme="system"] .tool-btn.toggle[aria-pressed="true"] span { display: inline; }
   .effort-btn .eff-v { display: none; }
   .composer-tools { gap: 6px; }
-  .tools-left, .tools-right { gap: 4px; }
+  .tools-left, .tools-right { gap: 4px; min-width: 0; }
+  .tools-left { overflow: hidden; }
+  /* Popovers viram folha inferior centralizada no celular (o JS posiciona inline; !important vence) */
+  .popover { left: 12px !important; right: 12px !important; top: auto !important;
+    bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+    width: auto !important; min-width: 0 !important; max-width: none !important;
+    max-height: 72dvh; overflow-y: auto; border-radius: var(--r-xl);
+    animation: sheet .24s var(--ease); }
+  @keyframes sheet { from { opacity: 0; transform: translateY(16px); } }
   .msg.user .bubble { max-width: 88%; }
 }
 
