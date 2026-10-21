@@ -401,8 +401,8 @@ kbd {
 
 /* Indique e Ganhe: um item do menu, na mesma altura dos outros, com o presente em pontos num quadrado da cor de destaque */
 .sb-item > .refer-icon { flex: none; }
-.refer-icon { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 6px; background: var(--accent-solid); color: var(--accent-on); }
-.refer-gift { width: 12px; height: 12px; color: var(--accent-on); }
+.refer-icon { width: 26px; height: 26px; margin: 0 -4px; flex: none; display: grid; place-items: center; border-radius: 7px; background: var(--accent-solid); color: var(--accent-on); }
+.refer-gift { width: 16px; height: 16px; color: var(--accent-on); }
 .refer-gift rect.off { opacity: .2; }
 /* Uma onda passa pelos pontos de tempos em tempos; no hover os pontos piscam em sequência */
 .refer-gift rect.on { animation: giftsweep 6s ease-in-out infinite; animation-delay: calc(var(--i) * 70ms); }
