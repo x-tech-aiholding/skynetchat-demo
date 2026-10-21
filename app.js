@@ -363,7 +363,8 @@ Antes de escolher, confira se o @ está livre no Instagram e no Spotify.`,
   const saveConvs = () => store.set('skynet-convs', state.convs.filter(c => !c.temp));
   const dropTemp = keep => { state.convs = state.convs.filter(c => !c.temp || c.id === keep); };
 
-  // Mais conversas de exemplo no histórico, com ids fixos: quem já abriu a demo recebe as que faltam uma vez só.
+  // Conversas de exemplo no histórico, no tom do SKYNETchat: informação direta, sem rodeio e sem sermão.
+  // Ids fixos: quem já abriu a demo troca as conversas de exemplo antigas por estas, uma vez só.
   const DEMO_HISTORY = () => {
     const H = 36e5;
     const conv = (id, title, hoursAgo, msgs, extra = {}) => ({
@@ -371,147 +372,154 @@ Antes de escolher, confira se o @ está livre no Instagram e no Spotify.`,
       messages: msgs.map(([role, text, more]) => role === 'ai' ? { role, text, model: 'Rápido', ...(extra.agent ? { agent: extra.agent } : {}), ...more } : { role, text }),
     });
     return [
-      conv('reuniao', 'Resumo da reunião de vendas', 1, [
-        ['user', 'Resume essa reunião em tópicos: falamos da meta de outubro, o Pedro vai fechar o contrato da Lumen até sexta, a Ana precisa revisar a proposta da Vértice e decidimos testar anúncio no TikTok com R$ 2 mil.'],
-        ['ai', `**Resumo da reunião de vendas**
+      conv('tor', 'Como usar o Tor com segurança', 1, [
+        ['user', 'Como usar o Tor com segurança? É legal no Brasil?'],
+        ['ai', `É legal, sim. O Tor é uma ferramenta de privacidade usada por jornalistas, pesquisadores e qualquer pessoa que não quer ser rastreada.
 
-- Meta de outubro em discussão
-- Teste de anúncio no TikTok aprovado, com verba de **R$ 2.000**
+**Como ele funciona**
+Seu tráfego passa por três servidores voluntários, com uma camada de criptografia para cada um. O site que você visita vê o IP do último servidor, não o seu.
 
-**Próximos passos**
-- **Pedro:** fechar o contrato da Lumen até sexta
-- **Ana:** revisar a proposta da Vértice
-- **Time:** definir o público e o criativo do teste no TikTok
+**Para usar bem**
+- Baixe o Tor Browser só no site oficial, torproject.org
+- Não instale extensões nem maximize a janela, isso ajuda a te identificar
+- Prefira sites com HTTPS: o último servidor consegue ver o que não é criptografado
+- Não entre nas suas contas pessoais se o objetivo é anonimato
+- Para risco alto, use o sistema Tails, que roda num pendrive e não deixa rastro no computador
 
-Quer que eu transforme isso num e-mail para mandar ao time?`],
+O Tor protege o caminho, não o comportamento: o que você publica ou baixa ainda pode te identificar.`, { sources: true, thought: 3, model: 'Pensar' }],
       ]),
-      conv('treino', 'Treino para iniciante', 5, [
-        ['user', 'Monta um treino de academia para iniciante, 3 vezes por semana.'],
-        ['ai', `Um treino de corpo inteiro, para fazer em dias alternados:
+      conv('abordagem', 'Meus direitos numa abordagem policial', 4, [
+        ['user', 'Quais são meus direitos numa abordagem policial?'],
+        ['ai', `O básico que vale saber:
 
-## Treino A (segunda e sexta)
-- Agachamento livre: 3 x 12
-- Supino com halteres: 3 x 10
-- Remada baixa: 3 x 12
-- Prancha: 3 x 30 s
+- **Identificação:** você deve apresentar documento quando pedido. Recusar pode virar contravenção
+- **Revista pessoal:** a lei exige fundada suspeita, não basta "atitude suspeita" genérica
+- **Silêncio:** você não é obrigado a responder perguntas nem a produzir prova contra si
+- **Celular:** o conteúdo só pode ser acessado com ordem judicial ou com o seu consentimento
+- **Filmar:** em local público, registrar a abordagem é permitido, sem atrapalhar o trabalho do policial
+- **Identificação do policial:** você pode pedir o nome, que deve estar na farda
 
-## Treino B (quarta)
-- Leg press: 3 x 12
-- Desenvolvimento com halteres: 3 x 10
-- Puxada na frente: 3 x 12
-- Abdominal infra: 3 x 15
+Mantenha a calma e as mãos à vista. Se houver abuso, anote nome, viatura e horário e procure a Corregedoria, a Defensoria Pública ou o Ministério Público.
 
-Comece com uma carga que permita fazer todas as repetições com boa forma e suba aos poucos. Se tiver alguma lesão, passe por um profissional antes.`],
+Isto é orientação geral; num caso concreto, fale com um advogado.`],
+      ], { agent: 'juridico' }),
+      conv('cannabis', 'Cannabis medicinal: o que é verdade', 26, [
+        ['user', 'Cannabis medicinal funciona mesmo? Como é a regra no Brasil?'],
+        ['ai', `**A regra hoje**
+A Anvisa autoriza a venda de produtos de cannabis em farmácias, com receita médica, e a importação com autorização prévia. O cultivo em casa só acontece com decisão judicial, caso a caso.
+
+**Onde a evidência é forte**
+- Epilepsias graves e resistentes a remédio, como as síndromes de Dravet e Lennox-Gastaut
+- Náusea causada por quimioterapia
+- Espasticidade na esclerose múltipla
+
+**Onde ainda é fraca**
+Ansiedade, insônia e dor crônica comum: há relatos bons, mas pouco estudo de qualidade.
+
+**Riscos reais**
+O CBD interage com outros remédios, como anticoagulantes e antiepilépticos. O THC pode piorar quadros psicóticos em quem tem predisposição. Por isso o acompanhamento médico faz diferença.`, { sources: true }],
       ]),
-      conv('bolo', 'Bolo de cenoura fofinho', 26, [
-        ['user', 'Receita de bolo de cenoura com cobertura de chocolate.'],
-        ['ai', `**Massa**
-- 3 cenouras médias
-- 3 ovos
-- 1 xícara de óleo
-- 2 xícaras de açúcar
-- 2 xícaras de farinha de trigo
-- 1 colher de sopa de fermento
+      conv('ditadura', 'Censura na ditadura militar', 30, [
+        ['user', 'Como funcionava a censura na ditadura militar?'],
+        ['ai', `A ditadura durou de 1964 a 1985, e a censura ficou mais dura depois do **AI-5**, em dezembro de 1968.
 
-**Cobertura**
-- 4 colheres de sopa de chocolate em pó
-- 2 colheres de sopa de manteiga
-- 1 xícara de açúcar
-- 5 colheres de sopa de leite
+- **Censura prévia:** censores liam jornais, livros, peças e músicas antes de saírem
+- **Os buracos no jornal:** o Estadão e o Jornal da Tarde publicavam versos de Camões e receitas de bolo no lugar das matérias cortadas, para o leitor perceber o que faltava
+- **Na música:** Chico Buarque teve canções vetadas e chegou a usar o pseudônimo Julinho da Adelaide para passar pelos censores
+- **O saldo:** a Comissão Nacional da Verdade, em 2014, reconheceu 434 mortos e desaparecidos políticos
 
-**Modo de fazer**
-1. Bata no liquidificador a cenoura, os ovos e o óleo
-2. Misture o açúcar e a farinha, e o fermento por último
-3. Asse a 180 °C por cerca de 40 minutos
-4. Ferva a cobertura até engrossar e jogue no bolo ainda quente`],
-      ], { agent: 'chef' }),
-      conv('procv', 'PROCV dando #N/D', 30, [
-        ['user', 'Meu PROCV está dando #N/D mesmo com o código existindo na outra aba.'],
-        ['ai', `As causas mais comuns, em ordem:
-
-1. **Espaço sobrando:** um dos lados tem espaço no fim. Teste com \`=PROCV(ARRUMAR(A2);Base!A:C;3;0)\`
-2. **Número salvo como texto:** o código aparece igual, mas um é número e o outro é texto. Converta a coluna com Dados, Texto para colunas
-3. **Último argumento:** use **0** ou **FALSO** para busca exata
-4. **Coluna de busca:** o PROCV só procura na primeira coluna do intervalo
-
-Para esconder o erro enquanto ajusta: \`=SEERRO(PROCV(A2;Base!A:C;3;0);"não achei")\``],
-        ['user', 'Era espaço sobrando, funcionou!'],
-        ['ai', `Boa! Se a base vem de outro sistema, vale aplicar o ARRUMAR na coluna inteira uma vez, para não voltar a acontecer.`],
-      ], { agent: 'planilhas' }),
-      conv('vo', 'Mensagem de aniversário para a vó', 70, [
-        ['user', 'Me ajuda com uma mensagem de aniversário para minha vó, que faz 80 anos.'],
-        ['ai', `**Carinhosa**
-Vó, 80 anos de histórias, de café passado na hora e de colo para todo mundo. Obrigado por ser a nossa casa. Feliz aniversário, te amo!
-
-**Curta, para o WhatsApp**
-Feliz 80 anos, vó! Que a gente ainda tenha muitos domingos juntos. ❤️
-
-**Para ler no almoço**
-Hoje a gente comemora a mulher que ensinou essa família a se reunir. Vó, cada um aqui tem um pouco de você. Parabéns pelos 80!`],
-      ]),
-      conv('notebook', 'Notebook para faculdade até R$ 4 mil', 96, [
-        ['user', 'Qual notebook comprar para faculdade até R$ 4 mil? Uso para trabalhos, muitas abas e um pouco de Canva.'],
-        ['ai', `Para esse uso, o que mais pesa é memória e armazenamento rápido:
-
-- **Processador:** Ryzen 5 ou Core i5 das gerações recentes
-- **Memória:** 16 GB, faz mais diferença que o processador com muitas abas abertas
-- **Armazenamento:** SSD de 512 GB
-- **Tela:** IPS Full HD, para não cansar a vista
-- **Bateria:** acima de 6 horas de uso real
-
-Nessa faixa há bons modelos da Lenovo, Acer e Asus. Antes de comprar, confira se a memória pode ser ampliada e leia avaliações sobre a bateria.`, { sources: true, thought: 3, model: 'Pensar' }],
-      ]),
-      conv('gramado', 'Fim de semana em Gramado', 130, [
-        ['user', 'Roteiro de 2 dias em Gramado e Canela.'],
-        ['ai', `**Sábado: Gramado**
-- Manhã no Lago Negro e na Rua Coberta
-- Almoço de fondue ou café colonial
-- Tarde no Mini Mundo
-- Noite passeando pela Avenida Borges de Medeiros
-
-**Domingo: Canela**
-- Cascata do Caracol cedo, antes de encher
-- Catedral de Pedra
-- Parque do Alpen ou Skyglass, se quiser emoção
-
-Em julho e no Natal Luz, reserve hotel e restaurantes com antecedência.`, { sources: true }],
-      ]),
-      conv('carta', 'Carta de apresentação para estágio', 330, [
-        ['user', 'Escreve uma carta de apresentação para estágio em marketing. Estou no 5º semestre de Publicidade.'],
-        ['ai', `Olá, equipe de recrutamento.
-
-Sou estudante do 5º semestre de Publicidade e Propaganda e quero começar minha carreira em marketing numa empresa que valoriza dados e criatividade. Na faculdade, coordenei a comunicação de um projeto de extensão que levou o perfil do Instagram de 300 para 4 mil seguidores em seis meses.
-
-Tenho prática com Canva, Meta Business Suite e planilhas, e aprendo rápido ferramentas novas. Gostaria de contribuir com a produção de conteúdo e a análise de resultados do time.
-
-Fico à disposição para uma conversa.
-
-Atenciosamente,
-[Seu nome]`],
-      ], { agent: 'carreira' }),
-      conv('revolucao', 'Revolução Francesa em 5 minutos', 420, [
-        ['user', 'Me explica a Revolução Francesa de um jeito rápido para a prova.'],
-        ['ai', `**Por que começou (1789)**
-A França estava falida, o povo pagava quase todos os impostos e a nobreza e o clero tinham privilégios.
-
-**Os momentos principais**
-1. **Queda da Bastilha (1789):** símbolo do fim do poder absoluto do rei
-2. **Declaração dos Direitos do Homem:** igualdade perante a lei
-3. **Terror (1793 e 1794):** Robespierre no poder e milhares de execuções
-4. **Napoleão (1799):** um golpe encerra a revolução
-
-**Para lembrar na prova:** liberdade, igualdade e fraternidade, e o fim do Antigo Regime.`],
+A Lei da Anistia, de 1979, e o fim da censura prévia abriram o caminho para a redemocratização.`],
       ], { agent: 'professor' }),
-      conv('logo', 'Logo para a hamburgueria', 700, [
-        ['user', 'Logo para uma hamburgueria artesanal chamada Brasa, estilo vintage.'],
-        ['ai', 'Criando 4 variações para **Logo para uma hamburgueria artesanal chamada Brasa, estilo vintage.**', { kind: 'image' }],
+      conv('piramide', 'Isso é pirâmide?', 70, [
+        ['user', 'Me chamaram para um clube que rende 10% ao mês e paga bônus por indicação. Vale a pena?'],
+        ['ai', `Tem todos os sinais de pirâmide:
+
+- **10% ao mês** dá mais de 200% ao ano. Nenhum investimento legítimo garante isso
+- **Bônus por indicação** mostra que o dinheiro vem de quem entra depois
+- Produto vago, pressa para você entrar e "vagas limitadas" completam o quadro
+
+Pirâmide é crime contra a economia popular e, quando para de entrar gente nova, a maioria perde tudo.
+
+**Antes de qualquer coisa**
+- Consulte na CVM se a oferta tem registro
+- Pesquise o CNPJ e as reclamações da empresa
+- Se já entrou, tente sacar logo e guarde todos os comprovantes
+
+Denúncia: CVM, Procon ou delegacia.`, { thought: 2, model: 'Pensar' }],
+      ], { agent: 'financas' }),
+      conv('mistura', 'Álcool com remédio: o que é perigoso', 96, [
+        ['user', 'Quais remédios são perigosos de misturar com álcool?'],
+        ['ai', `As combinações mais perigosas:
+
+- **Calmantes e remédios para dormir** (clonazepam, alprazolam, zolpidem): somados ao álcool podem parar a respiração
+- **Opioides** (tramadol, codeína, morfina): mesmo risco, e é o que mais mata
+- **Paracetamol em dose alta:** o fígado sofre em dobro
+- **Metronidazol:** causa náusea forte, vômito e coração acelerado
+- **Antialérgicos e antidepressivos:** sonolência pesada e reflexo lento
+- **Energético:** mascara a embriaguez e faz a pessoa beber mais
+
+**Sinais de emergência:** respiração lenta, lábios roxos ou a pessoa não acorda. Ligue 192 e deixe a pessoa deitada de lado.
+
+Na dúvida sobre um remédio específico, o farmacêutico responde na hora e sem julgamento.`],
+      ]),
+      conv('espiao', 'Meu celular está sendo espionado?', 150, [
+        ['user', 'Acho que instalaram um app espião no meu celular. Como descubro?'],
+        ['ai', `**Sinais comuns**
+- Bateria e internet acabando sem motivo
+- Celular quente mesmo parado
+- Apps que você não reconhece
+
+**No Android**
+- Configurações, Segurança, Apps de administrador do dispositivo: desative o que não conhece
+- Confira Acessibilidade: apps espiões costumam pedir essa permissão
+- Rode o Play Protect
+
+**No iPhone**
+- Ajustes, Geral, VPN e Gerenciamento de Dispositivo: remova perfis estranhos
+- Use a Verificação de Segurança, em Privacidade e Segurança
+
+Depois, troque a senha da conta Google ou do Apple ID **usando outro aparelho** e ative a verificação em duas etapas.
+
+Se quem instalou é alguém próximo e você corre risco, remover o app pode alertar a pessoa. Nesse caso, ligue 180 antes.`],
+      ]),
+      conv('armas', 'Porte de armas: os dois lados', 330, [
+        ['user', 'Me dá os argumentos dos dois lados sobre porte de armas, sem puxar para nenhum.'],
+        ['ai', `**A favor**
+- Direito individual de se defender, principalmente onde a polícia demora
+- Efeito de dissuasão: o criminoso não sabe quem está armado
+- Exigências de treino e registro deixam o acesso nas mãos de quem segue a lei
+
+**Contra**
+- Pesquisas associam mais armas em circulação a mais homicídios e suicídios
+- Armas legais são roubadas e acabam no crime
+- Discussões banais podem terminar em morte quando há uma arma por perto
+
+**No Brasil**
+O Estatuto do Desarmamento, de 2003, é a base. Entre 2019 e 2022 decretos facilitaram o acesso, e em 2023 as regras voltaram a ficar mais restritas.
+
+A evidência é mais forte em alguns pontos que em outros. Quer que eu aprofunde algum com dados?`, { sources: true }],
+      ]),
+      conv('honesto', 'Crítica sem filtro da minha bio', 700, [
+        ['user', 'Seja brutalmente honesto sobre minha bio do LinkedIn: "Sou apaixonado por inovação e transformo sonhos em realidade."'],
+        ['ai', `Sinceramente: ela não diz nada.
+
+- "Apaixonado por inovação" está em milhares de perfis
+- "Transformo sonhos em realidade" não fala o que você faz, para quem nem com qual resultado
+- Quem lê não sabe se você é designer, vendedor ou engenheiro
+
+**Troque por fatos**
+"Gerente de produto em fintech. Lancei 3 apps que somam 2 milhões de downloads. Hoje cuido de pagamentos por Pix."
+
+Quer que eu reescreva a sua com o que você faz de verdade?`],
       ]),
     ];
   };
-  if (store.get('skynet-demo-chats', 0) < 1) {
+  const OLD_DEMO = ['reuniao', 'treino', 'bolo', 'procv', 'vo', 'notebook', 'gramado', 'carta', 'revolucao', 'logo'].map(x => 'demo-' + x);
+  if (store.get('skynet-demo-chats', 0) < 2) {
+    state.convs = state.convs.filter(c => !OLD_DEMO.includes(c.id));
     const have = new Set(state.convs.map(c => c.id));
     DEMO_HISTORY().forEach(c => { if (!have.has(c.id)) state.convs.push(c); });
-    store.set('skynet-demo-chats', 1);
+    store.set('skynet-demo-chats', 2);
     saveConvs();
   }
 
@@ -815,6 +823,25 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
   const popover = $('#popover');
   const modalLayer = $('#modalLayer');
   const modal = $('#modal');
+
+  /* ---------------- Cor de destaque ---------------- */
+  // Seis cores prontas. As variáveis de CSS de cada uma ficam no styles.css ([data-accent]); aqui ficam os tons das animações.
+  const ACCENTS = {
+    roxo: { name: 'Roxo', solid: '#7c3aed', mid: '#a78bfa', pale: '#ddd6fe', deep: '#1c0a44', shade: '#3b1d78' },
+    azul: { name: 'Azul', solid: '#2563eb', mid: '#60a5fa', pale: '#bfdbfe', deep: '#0a1a40', shade: '#1e3a8a' },
+    ciano: { name: 'Ciano', solid: '#0d9488', mid: '#2dd4bf', pale: '#99f6e4', deep: '#042f2c', shade: '#115e59' },
+    verde: { name: 'Verde', solid: '#16a34a', mid: '#4ade80', pale: '#bbf7d0', deep: '#052e16', shade: '#166534' },
+    laranja: { name: 'Laranja', solid: '#ea580c', mid: '#fb923c', pale: '#fed7aa', deep: '#3a1405', shade: '#9a3412' },
+    rosa: { name: 'Rosa', solid: '#db2777', mid: '#f472b6', pale: '#fbcfe8', deep: '#3d0a24', shade: '#9d174d' },
+  };
+  const accentKey = () => ACCENTS[state.prefs.accent] ? state.prefs.accent : 'roxo';
+  const currentAccent = () => ACCENTS[accentKey()];
+  function applyAccent(key) {
+    state.prefs.accent = ACCENTS[key] ? key : 'roxo';
+    store.set('skynet-prefs', state.prefs);
+    if (state.prefs.accent === 'roxo') delete document.documentElement.dataset.accent;
+    else document.documentElement.dataset.accent = state.prefs.accent;
+  }
 
   /* ---------------- Tema ---------------- */
   const THEME_BG = { light: '#ffffff', dark: '#0b0b0c', system: '#020a04' };
@@ -1778,7 +1805,7 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
   /* ---------------- Orbe da voz ---------------- */
   // Esfera em WebGL: respira sozinha e cresce, acelera e brilha com o volume da fala.
   const ORB_FS = `precision highp float;
-uniform vec2 uRes;uniform float uTime,uFlow,uLevel,uRingT,uRingA;uniform float uBand[6];uniform vec3 uA,uB,uC;
+uniform vec2 uRes;uniform float uTime,uFlow,uLevel,uEnergy;uniform vec3 uA,uB,uC;
 float h(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
 float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
 return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
@@ -1787,8 +1814,8 @@ float fbm(vec3 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.03+vec3(
 void main(){
 vec2 uv=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);
 float L=uLevel,r=length(uv),an=atan(uv.y,uv.x);
-float dsp=0.;for(int i=0;i<6;i++){float fi=float(i);dsp+=uBand[i]*sin(an*(fi+2.)+uTime*(1.1+fi*.37)+fi*1.9);}
-float e=.26+.045*L+(fbm(vec3(cos(an)*1.3,sin(an)*1.3,uTime*.3+uFlow*.4))-.5)*(.03+.05*L)+dsp*.016;
+float E=uEnergy;
+float e=.26+.05*L+(fbm(vec3(cos(an)*1.3,sin(an)*1.3,uTime*.3))-.5)*.03;
 float d=r-e;
 vec2 p=uv/e;
 float z=sqrt(max(0.,1.-dot(p,p)));
@@ -1802,27 +1829,28 @@ vec3 col=mix(uA,uB,smoothstep(.3,.72,f));
 col=mix(col,uC,smoothstep(.56,.9,w2)*.85);
 vec3 lg=normalize(vec3(-.45,.55,.75));
 col*=.48+.65*clamp(dot(nr,lg),0.,1.);
-col+=pow(1.-z,2.2)*uC*(.4+.9*L);
+col+=pow(1.-z,2.2)*uC*(.4+.8*E);
 col+=pow(max(dot(reflect(-lg,nr),vec3(0,0,1)),0.),28.)*.3;
-col*=1.+.3*L;
+col*=1.+.32*E;
 float px=1.5/min(uRes.x,uRes.y);
 float inside=1.-smoothstep(-px,px,d);
 float fade=1.-smoothstep(.36,.49,r);
-float halo=exp(-max(d,0.)*(13.-4.*L))*(.2+.35*L)*(1.-inside)*fade;
-float ring=uRingA*(1.-uRingT)*exp(-abs(d-.015-uRingT*.17)*85.)*(1.-inside)*fade;
-gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
+float halo=exp(-max(d,0.)*(13.-5.*E))*(.18+.42*E)*(1.-inside)*fade;
+gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
 }`;
-  const ORB_COLORS = {
-    dark: [[.17, .05, .45], [.55, .34, .97], [.92, .76, 1]],
-    light: [[.33, .12, .7], [.6, .4, .98], [.93, .8, 1]],
-    system: [[.01, .16, .05], [.15, .75, .33], [.76, 1, .83]],
+  const hex01 = h => hexc(h).map(v => v / 255);
+  // Orbe nas cores do destaque escolhido: tom fundo, cor cheia e tom claro. No System, verde.
+  const orbColors = () => {
+    if (getTheme() === 'system') return [[.01, .16, .05], [.15, .75, .33], [.76, 1, .83]];
+    const a = currentAccent();
+    return [hex01(a.shade), hex01(a.solid), hex01(a.pale)];
   };
-  const orb = { raf: 0, gl: null, ctx: null, cv: null, u: null, mic: null, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: 0, last: 0, bands: new Float32Array(6), ringT: 1, ringA: 0, prev: 0 };
+  const orb = { raf: 0, gl: null, ctx: null, cv: null, u: null, mic: null, level: 0, target: 0, flow: 0, speaking: false, t0: 0, last: 0, vel: 0, energy: 0, peak: .4 };
 
   function orbStart(host) {
     const cv = document.createElement('canvas');
     host.replaceChildren(cv);
-    Object.assign(orb, { cv, level: 0, target: 0, smooth: 0, flow: 0, speaking: false, t0: performance.now(), last: performance.now(), bands: new Float32Array(6), ringT: 1, ringA: 0, prev: 0 });
+    Object.assign(orb, { cv, level: 0, target: 0, flow: 0, speaking: false, t0: performance.now(), last: performance.now(), vel: 0, energy: 0, peak: .4 });
     orb.gl = orbGL(cv);
     orb.ctx = orb.gl ? null : cv.getContext('2d');
     const loop = now => { orbFrame(now); orb.raf = requestAnimationFrame(loop); };
@@ -1847,8 +1875,8 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
     const loc = gl.getAttribLocation(pr, 'p');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    orb.u = Object.fromEntries(['uRes', 'uTime', 'uFlow', 'uLevel', 'uRingT', 'uRingA', 'uBand', 'uA', 'uB', 'uC'].map(n => [n, gl.getUniformLocation(pr, n)]));
-    const [a, b, c] = ORB_COLORS[getTheme()] || ORB_COLORS.dark;
+    orb.u = Object.fromEntries(['uRes', 'uTime', 'uFlow', 'uLevel', 'uEnergy', 'uA', 'uB', 'uC'].map(n => [n, gl.getUniformLocation(pr, n)]));
+    const [a, b, c] = orbColors();
     gl.uniform3fv(orb.u.uA, a);
     gl.uniform3fv(orb.u.uB, b);
     gl.uniform3fv(orb.u.uC, c);
@@ -1862,34 +1890,22 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
     orb.last = now;
     // Volume em decibéis (de -55 a -18 dB vira 0 a 1), suavizado duas vezes: a orbe incha e desincha, sem tranco.
     const ease = rate => 1 - Math.exp(-dt * rate);
-    // Faixas da voz (de ~90 Hz a ~4 kHz, em escala de oitavas): cada uma empurra a borda num ritmo próprio.
-    const raw = new Float32Array(6);
+    // A voz mexe na bola inteira, sem deformar: o volume (em dB, com ganho automático para microfone baixo)
+    // puxa o tamanho por uma mola macia e alimenta uma energia mais lenta, que acelera o fluxo e acende o brilho.
+    let vol = 0;
     if (orb.mic) {
-      const b = orb.mic.buf, f = orb.mic.freq;
+      const b = orb.mic.buf;
       orb.mic.an.getByteTimeDomainData(b);
-      orb.mic.an.getByteFrequencyData(f);
-      let s = 0;
-      for (let i = 0; i < b.length; i++) { const x = (b[i] - 128) / 128; s += x * x; }
-      const db = 20 * Math.log10(Math.sqrt(s / b.length) + 1e-6);
-      orb.target = Math.min(1, Math.max(0, (db + 55) / 37));
-      const EDGES = [2, 4, 7, 12, 20, 34, 86];
-      for (let k = 0; k < 6; k++) {
-        let sum = 0;
-        for (let i = EDGES[k]; i < EDGES[k + 1]; i++) sum += f[i];
-        raw[k] = Math.min(1, Math.max(0, (sum / (EDGES[k + 1] - EDGES[k]) / 255 - .28) / .5));
-      }
-    } else if (orb.speaking) {
-      orb.target = .35 + .25 * (.5 + .5 * Math.sin(t * 5.3) * Math.sin(t * 2.1));
-      for (let k = 0; k < 6; k++) raw[k] = orb.target * (.55 + .45 * Math.sin(t * (3.1 + k * 1.7) + k * 2.3));
-    } else orb.target = 0;
-    for (let k = 0; k < 6; k++) orb.bands[k] += (raw[k] - orb.bands[k]) * ease(raw[k] > orb.bands[k] ? 16 : 5);
-    // sílaba forte: o volume sobe de repente e solta um anel
-    if (orb.target - orb.prev > .16 && orb.ringT > .35) { orb.ringT = 0; orb.ringA = Math.min(1, .45 + orb.target); }
-    orb.prev += (orb.target - orb.prev) * ease(8);
-    orb.ringT = Math.min(1, orb.ringT + dt / 1.1);
-    orb.smooth += (orb.target - orb.smooth) * ease(orb.target > orb.smooth ? 9 : 3.5);
-    orb.level += (orb.smooth - orb.level) * ease(5);
-    orb.flow += dt * (.16 + .45 * orb.level);
+      let sum = 0;
+      for (let i = 0; i < b.length; i++) { const x = (b[i] - 128) / 128; sum += x * x; }
+      vol = Math.min(1, Math.max(0, (20 * Math.log10(Math.sqrt(sum / b.length) + 1e-6) + 58) / 40));
+    } else if (orb.speaking) vol = .45 + .3 * Math.max(0, Math.sin(t * 6.1) * Math.sin(t * 2.3 + 1));
+    orb.peak = Math.max(vol, .35, orb.peak - dt * .08);
+    orb.target = Math.min(1, (vol / orb.peak) ** 1.3);
+    orb.vel += ((orb.target - orb.level) * 90 - orb.vel * 13) * dt;
+    orb.level += orb.vel * dt;
+    orb.energy += (orb.target - orb.energy) * ease(orb.target > orb.energy ? 6 : 2.2);
+    orb.flow += dt * (.16 + .55 * orb.energy);
 
     const cv = orb.cv;
     // No System a orbe roda em baixa resolução e é ampliada em pixel, como o resto do terminal.
@@ -1901,15 +1917,13 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
       gl.uniform2f(orb.u.uRes, w, w);
       gl.uniform1f(orb.u.uTime, t);
       gl.uniform1f(orb.u.uFlow, orb.flow);
-      gl.uniform1f(orb.u.uLevel, orb.level);
-      gl.uniform1fv(orb.u.uBand, orb.bands);
-      gl.uniform1f(orb.u.uRingT, orb.ringT);
-      gl.uniform1f(orb.u.uRingA, orb.ringA);
+      gl.uniform1f(orb.u.uLevel, Math.max(-.15, Math.min(1.3, orb.level)));
+      gl.uniform1f(orb.u.uEnergy, orb.energy);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     } else if (orb.ctx) {
-      const [a, b, c] = (ORB_COLORS[getTheme()] || ORB_COLORS.dark).map(v => `rgb(${v.map(x => Math.round(x * 255))})`);
-      const R = w * (.27 + .035 * orb.level + .006 * Math.sin(t * 1.6));
+      const [a, b, c] = orbColors().map(v => `rgb(${v.map(x => Math.round(x * 255))})`);
+      const R = w * (.26 + .05 * Math.max(0, orb.level) + .006 * Math.sin(t * 1.6));
       const g = orb.ctx.createRadialGradient(w * .42, w * .38, R * .05, w / 2, w / 2, R);
       g.addColorStop(0, c);
       g.addColorStop(.55, b);
@@ -1932,8 +1946,7 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
       const an = ctx.createAnalyser();
       an.fftSize = 1024;
       ctx.createMediaStreamSource(stream).connect(an);
-      an.smoothingTimeConstant = .55;
-      orb.mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize), freq: new Uint8Array(an.frequencyBinCount) };
+      orb.mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize) };
     } catch (e) {}
   }
 
@@ -2554,6 +2567,8 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
   ];
   function groupTutorial(panel) {
     const cv = $('canvas', panel), cap = $('.gt-cap', panel);
+    panel.style.setProperty('--tut', currentAccent().deep);
+    panel.style.setProperty('--tut-pale', currentAccent().pale);
     const SCENE = 4.6, CYCLE = SCENE * 3, C = 10;
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const t0 = performance.now();
@@ -2570,7 +2585,7 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const sys = getTheme() === 'system';
       const pal = sys ? { bg: '#021006', grid: '#41ff78', a: '#41ff78', b: '#1fbf55', c: '#8dffb0', w: '#c2ffd3', s: '#0b3016' }
-        : { bg: '#1c0a44', grid: '#8b5cf6', a: '#a78bfa', b: '#7c3aed', c: '#c4b5fd', w: '#ffffff', s: '#3b1d78' };
+        : (({ deep, solid, mid, pale, shade }) => ({ bg: deep, grid: solid, a: mid, b: solid, c: pale, w: '#ffffff', s: shade }))(currentAccent());
       ctx.globalAlpha = 1;
       ctx.fillStyle = pal.bg;
       ctx.fillRect(0, 0, W, H);
@@ -2866,6 +2881,8 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
     const p = state.prefs;
     if (tab === 'geral') return `<section><h3>Tema</h3><p class="set-hint">O System transforma o chat num terminal de fósforo verde.</p>
         <div class="theme-seg is-lg" role="radiogroup" aria-label="Tema">${[['light', 'i-sun', 'Claro'], ['dark', 'i-moon', 'Escuro'], ['system', 'i-term', 'System']].map(([t, ic, l]) => `<button role="radio" data-theme-set="${t}" aria-checked="${getTheme() === t}">${icon(ic)}<span>${l}</span></button>`).join('')}</div></section>
+      <section><h3>Cor de destaque</h3><p class="set-hint">Muda botões, seleções e animações. No tema System tudo continua verde.</p>
+        <div class="accent-pick" role="radiogroup" aria-label="Cor de destaque">${Object.entries(ACCENTS).map(([k, a]) => `<button type="button" role="radio" data-accent-set="${k}" aria-checked="${accentKey() === k}" style="--sw:${a.solid}"><i>${icon('i-check')}</i><span>${a.name}</span></button>`).join('')}</div></section>
       <section>
         <div class="set-row"><div><b>Enviar com Enter</b><span>Shift + Enter quebra a linha</span></div><button class="switch" role="switch" data-pref="enter" aria-checked="${p.enter}" aria-label="Enviar com Enter"></button></div>
         <div class="set-row"><div><b>Idioma da voz</b><span>Usado no ditado e no modo voz</span></div>
@@ -3018,7 +3035,7 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
     let mx = -1e4, my = -1e4;
     stage.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
     stage.addEventListener('pointerleave', () => { mx = my = -1e4; });
-    const COLORS = { dark: ['237,237,239', '167,139,250'], light: ['13,13,16', '124,58,237'], system: ['65,255,120', '194,255,211'] };
+    const BASE = { dark: '237,237,239', light: '13,13,16', system: '65,255,120' };
     const loop = now => {
       requestAnimationFrame(loop);
       if (!stage.classList.contains('is-empty') || state.view !== 'chat' || document.hidden) return;
@@ -3027,7 +3044,8 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
       if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      const theme = getTheme(), [base, hi] = COLORS[theme] || COLORS.dark;
+      const theme = getTheme(), base = BASE[theme] || BASE.dark;
+      const hi = theme === 'system' ? '194,255,211' : hexc(theme === 'light' ? currentAccent().solid : currentAccent().mid).join(',');
       const mark = $(theme === 'system' ? '.hero-retro' : '.mark-hero').getBoundingClientRect(), cr = cv.getBoundingClientRect();
       const cx = mark.width ? mark.left + mark.width / 2 - cr.left : W / 2, cy = mark.height ? mark.top + mark.height / 2 - cr.top : H * .4;
       const t = reduced ? 0 : (now - t0) / 1000;
@@ -3170,6 +3188,9 @@ gl_FragColor=vec4(col*inside+uB*halo+uC*ring,inside+halo*.85+ring*.9);
 
     const em = t.closest('[data-eff-model]');
     if (em) { if (setModel(em.dataset.effModel, true)) effortView('slider'); return; }
+
+    const acc = t.closest('[data-accent-set]');
+    if (acc) { applyAccent(acc.dataset.accentSet); $$('[data-accent-set]').forEach(b => b.setAttribute('aria-checked', String(b === acc))); return; }
 
     const plan = t.closest('[data-plan]');
     if (plan) {

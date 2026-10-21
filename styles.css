@@ -139,6 +139,18 @@
   color-scheme: dark;
 }
 
+/* Cores de destaque além do roxo (Configurações, Geral). O System não tem variação. */
+[data-accent="azul"][data-theme="dark"] { --accent: #93c5fd; --accent-soft: rgba(59, 130, 246, .16); --accent-soft-2: rgba(59, 130, 246, .26); --accent-line: rgba(96, 165, 250, .5); --accent-solid: #3b82f6; }
+[data-accent="azul"][data-theme="light"] { --accent: #1d4ed8; --accent-soft: rgba(37, 99, 235, .09); --accent-soft-2: rgba(37, 99, 235, .15); --accent-line: rgba(37, 99, 235, .38); --accent-solid: #2563eb; }
+[data-accent="ciano"][data-theme="dark"] { --accent: #5eead4; --accent-soft: rgba(13, 148, 136, .16); --accent-soft-2: rgba(13, 148, 136, .26); --accent-line: rgba(45, 212, 191, .5); --accent-solid: #0d9488; }
+[data-accent="ciano"][data-theme="light"] { --accent: #0f766e; --accent-soft: rgba(13, 148, 136, .09); --accent-soft-2: rgba(13, 148, 136, .15); --accent-line: rgba(13, 148, 136, .38); --accent-solid: #0d9488; }
+[data-accent="verde"][data-theme="dark"] { --accent: #86efac; --accent-soft: rgba(22, 163, 74, .16); --accent-soft-2: rgba(22, 163, 74, .26); --accent-line: rgba(74, 222, 128, .5); --accent-solid: #16a34a; }
+[data-accent="verde"][data-theme="light"] { --accent: #15803d; --accent-soft: rgba(22, 163, 74, .09); --accent-soft-2: rgba(22, 163, 74, .15); --accent-line: rgba(22, 163, 74, .38); --accent-solid: #16a34a; }
+[data-accent="laranja"][data-theme="dark"] { --accent: #fdba74; --accent-soft: rgba(234, 88, 12, .16); --accent-soft-2: rgba(234, 88, 12, .26); --accent-line: rgba(251, 146, 60, .5); --accent-solid: #ea580c; }
+[data-accent="laranja"][data-theme="light"] { --accent: #c2410c; --accent-soft: rgba(234, 88, 12, .09); --accent-soft-2: rgba(234, 88, 12, .15); --accent-line: rgba(234, 88, 12, .38); --accent-solid: #ea580c; }
+[data-accent="rosa"][data-theme="dark"] { --accent: #f9a8d4; --accent-soft: rgba(219, 39, 119, .16); --accent-soft-2: rgba(219, 39, 119, .26); --accent-line: rgba(244, 114, 182, .5); --accent-solid: #db2777; }
+[data-accent="rosa"][data-theme="light"] { --accent: #be185d; --accent-soft: rgba(219, 39, 119, .09); --accent-soft-2: rgba(219, 39, 119, .15); --accent-line: rgba(219, 39, 119, .38); --accent-solid: #db2777; }
+
 :root {
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -301,7 +313,8 @@ kbd {
 .wordmark span { font-weight: 400; color: var(--fg-2); }
 
 .sb-primary, .sb-nav { padding: 2px 8px; display: flex; flex-direction: column; gap: 1px; }
-.sb-nav { margin-top: 10px; }
+.sb-nav { padding-top: 12px; }
+.sb-refer { padding: 1px 8px 0; }
 
 .sb-item {
   display: flex; align-items: center; gap: 11px;
@@ -386,32 +399,16 @@ kbd {
 
 .sb-foot { flex: none; padding: 8px 8px 10px; display: flex; flex-direction: column; gap: 8px; }
 
-.refer {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--r-lg);
-  background: var(--surface-2);
-  text-align: left;
-  transition: background .15s;
-}
-.refer:hover { background: var(--surface-3); }
-.refer-icon {
-  width: 34px; height: 34px; flex: none;
-  border-radius: var(--r-md);
-  display: grid; place-items: center;
-  background: var(--accent-solid); color: var(--accent-on);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .18);
-}
-.refer-gift { width: 18px; height: 18px; color: var(--accent-on); }
+/* Indique e Ganhe: um item do menu, na mesma altura dos outros, com o presente em pontos num quadrado da cor de destaque */
+.sb-item > .refer-icon { flex: none; }
+.refer-icon { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 6px; background: var(--accent-solid); color: var(--accent-on); }
+.refer-gift { width: 12px; height: 12px; color: var(--accent-on); }
 .refer-gift rect.off { opacity: .2; }
 /* Uma onda passa pelos pontos de tempos em tempos; no hover os pontos piscam em sequência */
 .refer-gift rect.on { animation: giftsweep 6s ease-in-out infinite; animation-delay: calc(var(--i) * 70ms); }
 .refer:hover .refer-gift rect.on { animation: giftpop .7s var(--ease) both; animation-delay: calc(var(--i) * 35ms); }
 @keyframes giftsweep { 0%, 14%, 100% { opacity: 1; } 7% { opacity: .25; } }
 @keyframes giftpop { 0% { opacity: 1; } 35% { opacity: .2; } 100% { opacity: 1; } }
-.refer-text { display: flex; flex-direction: column; min-width: 0; }
-.refer-text strong { font-size: var(--fs-sm); font-weight: 600; }
-.refer-text small { font-size: var(--fs-xs); color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .theme-seg {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -896,6 +893,14 @@ kbd {
 .seg button[aria-checked="true"] { background: var(--seg-on); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
 
 .theme-seg.is-lg { max-width: 440px; }
+.accent-pick { display: flex; flex-wrap: wrap; gap: 12px; }
+.accent-pick button { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 56px; color: var(--fg-2); font-size: var(--fs-xs); font-weight: 500; }
+.accent-pick i { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--sw); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); transition: box-shadow .15s, transform .15s var(--ease); }
+.accent-pick i .i { width: 16px; height: 16px; stroke-width: 2.4; opacity: 0; transition: opacity .15s; }
+.accent-pick button:hover i { transform: scale(1.07); }
+.accent-pick button[aria-checked="true"] { color: var(--fg); }
+.accent-pick button[aria-checked="true"] i { box-shadow: 0 0 0 2px var(--modal-bg), 0 0 0 4px var(--sw); }
+.accent-pick button[aria-checked="true"] i .i { opacity: 1; }
 .theme-seg.is-lg button { height: 36px; font-size: var(--fs-sm); }
 .theme-seg.is-lg button .i { width: 16px; height: 16px; }
 
@@ -1185,10 +1190,10 @@ kbd {
 /* Grupo: metade direita com o tutorial em pixels */
 .modal.is-split { width: min(1020px, 100%); }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) 380px; }
-.gt-panel { position: relative; min-height: 560px; overflow: hidden; background: #1c0a44; }
+.gt-panel { position: relative; min-height: 560px; overflow: hidden; background: var(--tut, #1c0a44); }
 .gt-panel canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.gt-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 26px 24px; color: #fff; background: linear-gradient(to top, rgba(28, 10, 68, .96) 60%, rgba(28, 10, 68, 0)); }
-.gt-step { display: block; color: #c4b5fd; font-size: var(--fs-xs); font-weight: 600; }
+.gt-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 26px 24px; color: #fff; background: linear-gradient(to top, color-mix(in srgb, var(--tut, #1c0a44) 96%, transparent) 60%, transparent); }
+.gt-step { display: block; color: var(--tut-pale, #c4b5fd); font-size: var(--fs-xs); font-weight: 600; }
 .gt-cap b { display: block; margin-top: 4px; font-size: 20px; font-weight: 650; letter-spacing: -.02em; }
 .gt-cap p { margin: 6px 0 0; color: rgba(255, 255, 255, .72); font-size: var(--fs-sm); line-height: 1.5; }
 .gt-dots { display: flex; gap: 6px; margin-top: 14px; }
@@ -1208,7 +1213,7 @@ kbd {
 .pay .plans { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 12px; margin-top: 22px; align-items: stretch; }
 .pay .plan { padding: 20px 22px 22px; }
 .pay .plan:not(.is-pro) { background: transparent; border-color: var(--line-strong); }
-.pay .plan.is-pro { box-shadow: 0 18px 44px -14px rgba(124, 58, 237, .45); }
+.pay .plan.is-pro { box-shadow: 0 18px 44px -14px color-mix(in srgb, var(--accent-solid) 45%, transparent); }
 .pay .price { margin-top: 8px; }
 .pay .price strong { font-size: 30px; }
 .pay .plan-for { margin: 6px 0 14px; }
@@ -1453,8 +1458,6 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
 [data-theme="system"] .h-title { -webkit-mask-image: none; mask-image: none; }
 [data-theme="system"] .tag { text-transform: uppercase; font-size: 15px; line-height: 18px; }
 [data-theme="system"] kbd { font-size: 15px; }
-[data-theme="system"] .refer { background: transparent; border: 1px dashed var(--line-strong); }
-[data-theme="system"] .refer:hover { background: var(--surface-2); }
 [data-theme="system"] .refer-icon { box-shadow: var(--glow); }
 [data-theme="system"] .theme-seg { border: 1px solid var(--line); }
 [data-theme="system"] .theme-seg button { font-size: 16px; text-transform: uppercase; }

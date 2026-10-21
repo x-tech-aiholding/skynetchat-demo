@@ -16,6 +16,7 @@
         t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
       document.documentElement.dataset.theme = t;
+      try { var pr = JSON.parse(localStorage.getItem('skynet-prefs') || '{}'); if (pr.accent && pr.accent !== 'roxo') document.documentElement.dataset.accent = pr.accent; } catch (e) {}
       var bg = { light: '#ffffff', dark: '#0b0b0c', system: '#020a04' }[t];
       document.documentElement.style.background = bg;
       document.querySelector('meta[name="theme-color"]').setAttribute('content', bg);
@@ -109,7 +110,12 @@
         </button>
       </div>
 
-      <div class="sb-fold">
+      <div class="sb-fold"><div class="sb-fold-in">
+      <div class="sb-refer">
+        <button class="sb-item refer" data-modal="indique">
+          <span class="refer-icon"><span class="mark refer-gift" data-mark data-gift></span></span><span>Indique e Ganhe</span>
+        </button>
+      </div>
       <nav class="sb-nav">
         <button class="sb-item" data-modal="agents"><svg class="i"><use href="#i-bot"/></svg><span>Agentes</span><em class="tag">Novo</em></button>
         <button class="sb-item" data-mode="imagens"><svg class="i"><use href="#i-image"/></svg><span>Imagens</span><em class="tag">Beta</em></button>
@@ -118,16 +124,12 @@
         <button class="sb-item is-soon" data-toast="O Coder chega em breve: código, scripts e automação."><svg class="i"><use href="#i-code"/></svg><span>Coder</span><em class="tag tag-quiet">Em breve</em></button>
         <button class="sb-item" data-modal="prompts"><svg class="i"><use href="#i-book"/></svg><span>Prompts</span></button>
       </nav>
-      </div>
+      </div></div>
       <div class="sb-mini-wrap"><div class="sb-mini" id="sbMini" aria-label="Atalhos"></div></div>
 
       <div class="sb-history" id="history" aria-label="Histórico de conversas"></div>
 
       <div class="sb-foot">
-        <button class="refer" data-modal="indique">
-          <span class="refer-icon"><span class="mark refer-gift" data-mark data-gift></span></span>
-          <span class="refer-text"><strong>Indique e Ganhe</strong><small>Convide amigos e ganhe o PRO</small></span>
-        </button>
 
         <div class="theme-seg" role="radiogroup" aria-label="Tema">
           <button role="radio" data-theme-set="light" data-tip="Claro"><svg class="i"><use href="#i-sun"/></svg><span>Claro</span></button>
