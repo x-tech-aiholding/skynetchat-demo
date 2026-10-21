@@ -1663,14 +1663,16 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
   .pr-new { width: 44px; padding: 0; }
   .code-field { font-size: 21px; letter-spacing: .14em; height: 54px; }
   .gs-code { font-size: 30px; }
-  .msg.user .bubble { max-width: 88%; }
-}
-
-@media (max-width: 420px) {
   .tool-btn.toggle span { display: none; }
   .tool-btn.toggle { width: 34px; padding: 0; justify-content: center; }
   [data-theme="system"] .tool-btn.toggle span { display: none; }
   .effort-btn .eff-v { display: none; }
+  .composer-tools { gap: 6px; }
+  .tools-left, .tools-right { gap: 4px; }
+  .msg.user .bubble { max-width: 88%; }
+}
+
+@media (max-width: 420px) {
   .ref-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .ref-steps li { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; }
   .ref-steps .n { grid-row: span 2; margin: 0; }

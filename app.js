@@ -3070,11 +3070,15 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     // Segue a intenção de quem rola: para baixo recolhe (basta o histórico ter rolagem), para cima no topo volta.
     // Logo depois de recolher, o histórico cresce e a rolagem pode voltar ao zero sozinha; essa volta é ignorada.
     let lockUntil = 0, lastY = 0, touchY = null;
+    // O recolher é só do desktop: no celular a barra é gaveta e isso brigava com o scroll de toque.
+    const canCompact = () => !matchMedia('(max-width: 860px)').matches;
     const compact = on => {
+      if (!canCompact()) on = false;
       if (on === sb.classList.contains('is-compact')) return;
       sb.classList.toggle('is-compact', on);
       lockUntil = performance.now() + 450;
     };
+    window.addEventListener('resize', () => { if (!canCompact()) sb.classList.remove('is-compact'); });
     const overflow = () => historyEl.scrollHeight - historyEl.clientHeight > 4;
     historyEl.addEventListener('wheel', e => {
       if (e.deltaY > 2 && overflow()) compact(true);
@@ -3088,13 +3092,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       }
       lastY = y;
     }, { passive: true });
-    historyEl.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
-    historyEl.addEventListener('touchmove', e => {
-      if (touchY == null) return;
-      const dy = e.touches[0].clientY - touchY;
-      if (dy < -12 && overflow()) { compact(true); touchY = null; }
-      else if (dy > 18 && historyEl.scrollTop <= 0) { compact(false); touchY = null; }
-    }, { passive: true });
+
   })();
   function toggleSidebar() {
     app.classList.toggle('sb-collapsed');
