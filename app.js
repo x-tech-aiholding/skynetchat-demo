@@ -2206,6 +2206,9 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     ['plano', 'i-coins', 'Pagamento e plano', 'Conte o que aconteceu com a cobrança ou com o seu plano.'],
     ['conta', 'i-user', 'Minha conta', 'Qual a dúvida sobre login, e-mail ou dados da conta?'],
     ['indique', 'i-share', 'Indique e Ganhe', 'Qual amigo entrou pelo seu link e o que não apareceu?'],
+    ['agentes', 'i-bot', 'Agentes', 'Qual agente você usou e o que ele respondeu de diferente do esperado?'],
+    ['grupo', 'i-group', 'Conversas em grupo', 'Qual o código da sessão e o que aconteceu?'],
+    ['dados', 'i-lock', 'Privacidade e dados', 'Qual a sua dúvida sobre seus dados ou sobre apagar a conta?'],
     ['ideia', 'i-bulb', 'Sugestão', 'O que faria o SKYNETchat ficar melhor para você?'],
     ['outro', 'i-dots', 'Outro assunto', 'Descreva sua dúvida.'],
   ];
