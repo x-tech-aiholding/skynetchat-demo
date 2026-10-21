@@ -236,90 +236,90 @@ Antes de escolher, confira se o @ está livre no Instagram e no Spotify.`,
   const PROMPT_ICONS = { 'Escrita': 'i-pen', 'Estudos': 'i-cap', 'Trabalho': 'i-brief', 'Código': 'i-code', 'Criatividade': 'i-spark', [MINE]: 'i-user' };
 
   // Agentes especialistas. Com o back-end, desc e skills viram as instruções de sistema de cada um.
+  // Agentes do demo (só front): nome, descrição, ícone e cor. As respostas são simuladas em agentReply().
+  const AG_GROUPS = ['Pesquisa & Investigação', 'Segurança & Hacking', 'Programação'];
   const AGENT_LIST = [
-    { id: 'redator', name: 'Redator', color: '#4ade80', shape: 'square', eyes: 'dot', tag: 'Popular',
-      desc: 'Escreve e-mails, textos e posts no seu tom, do rascunho à versão final.',
-      skills: ['entendo o objetivo do texto e quem vai ler', 'escrevo no seu tom, sem cara de robô', 'entrego uma versão curta e uma longa para você escolher'],
-      starters: [['E-mail pedindo aumento', 'Escreva um e-mail para o meu gestor pedindo aumento, educado e firme.'], ['Texto a partir de tópicos', 'Transforme estes tópicos num texto corrido de três parágrafos:\n\n']] },
-    { id: 'revisor', name: 'Revisor', color: '#facc15', shape: 'triangle', eyes: 'dot',
-      desc: 'Corrige português, concordância e clareza sem mexer na sua voz.',
-      skills: ['corrijo ortografia, crase e concordância', 'aponto frases confusas e sugiro uma saída', 'explico cada correção para você aprender'],
-      starters: [['Revisar meu texto', 'Revise este texto e me mostre o que mudou:\n\n'], ['Dúvida de crase', 'Quando usar crase antes de horas e de nomes de cidade?']] },
-    { id: 'professor', name: 'Professor', color: '#60a5fa', shape: 'circle', eyes: 'dot', tag: 'Popular',
-      desc: 'Explica qualquer matéria passo a passo, do ENEM à faculdade.',
-      skills: ['começo pelo que você já sabe', 'explico com exemplo do dia a dia', 'fecho com exercícios para fixar'],
-      starters: [['Fotossíntese para o ENEM', 'Explique fotossíntese como se eu fosse fazer o ENEM amanhã.'], ['Equação do segundo grau', 'Me ensine a resolver equação do segundo grau passo a passo.']] },
-    { id: 'concurseiro', name: 'Concurseiro', color: '#f43f5e', shape: 'diamond', eyes: 'sleepy', tag: 'Novo',
-      desc: 'Monta cronograma, resume a lei seca e cria questões no estilo da banca.',
-      skills: ['monto o cronograma pelo edital e pelas horas que você tem', 'resumo a lei seca no que mais cai', 'crio questões no estilo da banca, com gabarito comentado'],
-      starters: [['Cronograma para o INSS', 'Monte um cronograma de 12 semanas para o concurso do INSS, estudando 3 horas por dia.'], ['Questões de Constitucional', 'Crie 5 questões de certo ou errado sobre direitos fundamentais, no estilo Cebraspe.']] },
-    { id: 'tradutor', name: 'Tradutor', color: '#2dd4bf', shape: 'ghost', eyes: 'dot',
-      desc: 'Traduz e adapta entre português, inglês e espanhol mantendo o sentido.',
-      skills: ['traduzo o sentido, não palavra por palavra', 'ajusto o tom para formal ou informal', 'aviso quando uma expressão não tem equivalente'],
-      starters: [['E-mail em inglês', 'Traduza para o inglês, em tom profissional:\n\n'], ['Expressão em espanhol', 'Como se diz "pagar mico" em espanhol, sem soar estranho?']] },
-    { id: 'dev', name: 'Dev', color: '#a78bfa', shape: 'bot', eyes: 'sleepy',
-      desc: 'Escreve, explica e corrige código em Python, JavaScript e SQL.',
-      skills: ['leio o erro antes de sair mudando o código', 'explico a correção linha a linha', 'entrego o código pronto para colar e rodar'],
-      starters: [['Achar um bug', 'Este código dá erro. Encontre o problema e corrija:\n\n'], ['Consulta SQL', 'Escreva uma consulta SQL que traga os 10 clientes que mais compraram no mês.']] },
-    { id: 'planilhas', name: 'Planilhas', color: '#a3e635', shape: 'square', eyes: 'sleepy',
-      desc: 'Fórmulas de Excel e Google Sheets, PROCV, tabela dinâmica e gráficos.',
-      skills: ['escrevo a fórmula já com os nomes das suas colunas', 'explico o que cada parte faz', 'sugiro o gráfico certo para o seu dado'],
-      starters: [['PROCV na prática', 'Me explique PROCV com um exemplo de lista de preços.'], ['Controle de gastos', 'Monte as colunas de uma planilha de controle de gastos do mês.']] },
-    { id: 'social', name: 'Social media', color: '#f472b6', shape: 'circle', eyes: 'dot', tag: 'Novo',
-      desc: 'Legendas, roteiros de Reels e calendário de posts para o mês.',
-      skills: ['escrevo o gancho dos 3 primeiros segundos', 'adapto o texto para cada rede', 'monto o calendário com ideias da semana'],
-      starters: [['Roteiro de Reels', 'Escreva um roteiro de Reels de 30 segundos para uma loja de roupas.'], ['Calendário do mês', 'Monte um calendário de posts de 4 semanas para uma clínica de estética.']] },
-    { id: 'vendas', name: 'Vendas', color: '#fb923c', shape: 'diamond', eyes: 'dot',
-      desc: 'Scripts de WhatsApp, copy de anúncio e resposta para cada objeção.',
-      skills: ['escrevo mensagem curta, que parece de gente', 'respondo objeção sem forçar a venda', 'testo duas versões de chamada'],
-      starters: [['Script de WhatsApp', 'Escreva um script de WhatsApp para retomar contato com um cliente que sumiu.'], ['Cliente achou caro', 'Como responder quando o cliente diz que está caro?']] },
-    { id: 'negocios', name: 'Negócios', color: '#f59e0b', shape: 'bot', eyes: 'dot',
-      desc: 'Plano de negócio, MEI, preço de venda e análise da concorrência.',
-      skills: ['calculo o preço com custo, imposto e margem', 'explico MEI, Simples e nota fiscal sem juridiquês', 'organizo o plano em passos com prazo'],
-      starters: [['Preço de venda', 'Me ajude a calcular o preço de venda de um bolo de pote.'], ['Abrir um MEI', 'Quais os passos para abrir um MEI e quanto eu pago por mês?']] },
-    { id: 'financas', name: 'Finanças', color: '#34d399', shape: 'triangle', eyes: 'sleepy',
-      desc: 'Organiza o orçamento, compara investimentos e simula juros em reais.',
-      skills: ['organizo o orçamento do jeito que cabe no seu mês', 'comparo CDB, Tesouro e poupança em reais', 'simulo juros e parcelas antes de você assinar'],
-      starters: [['Montar o orçamento', 'Ganho R$ 3.500 por mês. Me ajude a montar um orçamento.'], ['CDB ou Tesouro', 'Para guardar R$ 5.000 por um ano, CDB ou Tesouro Selic?']] },
-    { id: 'juridico', name: 'Jurídico', color: '#818cf8', shape: 'square', eyes: 'dot',
-      desc: 'Explica contrato, direito do consumidor e CLT em linguagem simples.',
-      skills: ['traduzo o contrato para linguagem simples', 'aponto as cláusulas que merecem atenção', 'digo quando é hora de procurar um advogado'],
-      starters: [['Produto com defeito', 'Comprei um celular que veio com defeito. Quais são os meus direitos?'], ['Demissão sem justa causa', 'Fui demitido sem justa causa. O que eu tenho para receber?']] },
-    { id: 'carreira', name: 'Carreira', color: '#fb7185', shape: 'circle', eyes: 'sleepy',
-      desc: 'Monta currículo, ajusta o LinkedIn e treina entrevista de emprego.',
-      skills: ['reescrevo experiências com resultado e número', 'ajusto o currículo para cada vaga', 'simulo a entrevista e dou retorno'],
-      starters: [['Melhorar o currículo', 'Melhore esta parte do meu currículo:\n\n'], ['Treinar entrevista', 'Simule uma entrevista de emprego para vaga de analista administrativo.']] },
-    { id: 'chef', name: 'Chef', color: '#fde047', shape: 'ghost', eyes: 'sleepy',
-      desc: 'Receita com o que tem na geladeira, cardápio da semana e lista de compras.',
-      skills: ['crio receita com o que você já tem', 'monto o cardápio dentro do orçamento', 'gero a lista de compras separada por seção'],
-      starters: [['O que tem na geladeira', 'Tenho ovo, arroz, tomate e queijo. O que faço para o jantar?'], ['Cardápio da semana', 'Monte um cardápio de almoço para 5 dias, barato e saudável.']] },
-    { id: 'viagem', name: 'Viagem', color: '#38bdf8', shape: 'bot', eyes: 'dot', tag: 'Novo',
-      desc: 'Roteiro dia a dia, orçamento e dicas de cada cidade.',
-      skills: ['monto o roteiro por bairro, sem perder tempo no trânsito', 'estimo o orçamento por dia', 'dou dica de época, clima e documentos'],
-      starters: [['Roteiro em Salvador', 'Monte um roteiro de 4 dias em Salvador, com orçamento médio.'], ['Primeira vez em Buenos Aires', 'Vou para Buenos Aires pela primeira vez. O que preciso saber?']] },
+    { id: 'busca-web', group: 'Pesquisa & Investigação', name: 'Busca na Web', color: '#60a5fa', icon: 'i-globe',
+      desc: 'Pesquisa em tempo real sem censura',
+      skills: ['busco em tempo real e trago a fonte de cada resposta', 'junto o que vários sites dizem num resumo só', 'aviso quando a informação é incerta ou tem versões'],
+      starters: [['Resumir um assunto', 'Resuma o que saiu de mais recente sobre [assunto], com as fontes.'], ['Comparar fontes', 'O que diferentes fontes dizem sobre [tema]?']] },
+    { id: 'osint', group: 'Pesquisa & Investigação', name: 'OSINT', color: '#f87171', icon: 'i-eye', tag: 'PRO',
+      desc: 'Investigação de perfis do Instagram',
+      skills: ['reúno o que é público sobre um perfil ou marca', 'confiro se uma conta parece falsa ou golpe', 'organizo os achados com o link de cada fonte'],
+      starters: [['Conta é golpe?', 'Como eu confiro se um perfil que me chamou é golpe?'], ['Pesquisa de marca', 'Que informações públicas existem sobre a empresa [nome]?']] },
+    { id: 'analise-sites', group: 'Pesquisa & Investigação', name: 'Análise de Sites', color: '#2dd4bf', icon: 'i-scan',
+      desc: 'Analise qualquer site ou URL',
+      skills: ['leio o site e resumo do que ele trata', 'confiro certificado, cabeçalhos e tecnologia usada', 'aponto sinais de site falso ou inseguro'],
+      starters: [['Esse site é seguro?', 'Este site é confiável para comprar? [cole a URL]'], ['O que o site usa', 'Que tecnologias este site parece usar? [cole a URL]']] },
+    { id: 'fact-checker', group: 'Pesquisa & Investigação', name: 'Fact-Checker', color: '#f59e0b', icon: 'i-flask',
+      desc: 'Verificação de fatos com fontes',
+      skills: ['separo o que é fato do que é opinião', 'procuro a fonte original da afirmação', 'dou um veredito com o grau de certeza'],
+      starters: [['Isso é verdade?', 'Verifique se é verdade: [cole a afirmação]'], ['Checar um print', 'Essa mensagem que recebi procede? [cole o texto]']] },
+    { id: 'geoloc', group: 'Pesquisa & Investigação', name: 'Geolocalização', color: '#fb7185', icon: 'i-pin',
+      desc: 'Rastreio de IPs e localização',
+      skills: ['explico de que região vem um endereço de IP', 'converto coordenadas em lugar e o contrário', 'digo o que um IP revela e o que não revela'],
+      starters: [['Região de um IP', 'De que região aproximada é este IP? [cole o IP]'], ['Entender coordenadas', 'Que lugar fica nestas coordenadas: [lat, long]?']] },
+
+    { id: 'pentest', group: 'Segurança & Hacking', name: 'Pentest Assistant', color: '#f87171', icon: 'i-shield', tag: 'PRO',
+      desc: 'Testes de penetração guiados',
+      skills: ['monto o checklist de um teste autorizado, com escopo', 'explico cada etapa e o que ela procura', 'organizo o relatório com risco e correção'],
+      starters: [['Checklist de pentest', 'Monte um checklist de pentest autorizado para uma aplicação web.'], ['Entender uma falha', 'Explique o que é injeção de SQL e como se proteger dela.']] },
+    { id: 'password', group: 'Segurança & Hacking', name: 'Password Tools', color: '#fbbf24', icon: 'i-key',
+      desc: 'Geração e análise de senhas',
+      skills: ['gero senhas fortes e explico por que são boas', 'avalio a força de uma senha sem guardá-la', 'ensino a usar gerenciador e dois fatores'],
+      starters: [['Senha forte', 'Gere uma senha forte de 20 caracteres e explique como guardar.'], ['Senha fraca?', 'O que torna uma senha fácil de descobrir?']] },
+    { id: 'forensics', group: 'Segurança & Hacking', name: 'Forensics', color: '#f472b6', icon: 'i-print',
+      desc: 'Análise forense digital',
+      skills: ['explico como se preserva uma evidência digital', 'ajudo a entender logs e a linha do tempo', 'aponto o que procurar depois de um incidente'],
+      starters: [['O que é forense', 'Para que serve uma análise forense e como ela funciona?'], ['Entender um log', 'Me ajude a entender o que este log mostra: [cole o log]']] },
+    { id: 'firewall', group: 'Segurança & Hacking', name: 'Firewall Tester', color: '#facc15', icon: 'i-shieldwarn',
+      desc: 'Teste regras de firewall',
+      skills: ['reviso regras e aponto o que está aberto demais', 'explico portas e protocolos em linguagem simples', 'sugiro uma política mais segura'],
+      starters: [['Revisar regras', 'Revise estas regras de firewall e aponte brechas: [cole aqui]'], ['Entender portas', 'Que portas eu devo manter fechadas no meu servidor?']] },
+    { id: 'malware', group: 'Segurança & Hacking', name: 'Malware Analysis', color: '#ef4444', icon: 'i-skull',
+      desc: 'Análise de malwares e payloads',
+      skills: ['explico o que um tipo de arquivo costuma fazer', 'aponto os sinais de que algo é malicioso', 'ensino como remover a ameaça e se proteger'],
+      starters: [['É vírus?', 'Recebi um arquivo estranho. Como sei se é perigoso sem abrir?'], ['Cliquei num link', 'Cliquei num link suspeito. O que faço agora?']] },
+    { id: 'wifi', group: 'Segurança & Hacking', name: 'WiFi Auditor', color: '#38bdf8', icon: 'i-wifi',
+      desc: 'Auditoria de redes sem fio',
+      skills: ['explico os padrões de segurança de wifi e qual usar', 'ajudo a deixar a sua rede mais protegida', 'aponto sinais de que alguém pode estar na rede'],
+      starters: [['Wifi mais seguro', 'Como deixo o wifi da minha casa mais seguro?'], ['WPA2 ou WPA3', 'Qual a diferença entre WPA2 e WPA3?']] },
+    { id: 'ddos', group: 'Segurança & Hacking', name: 'DDoS Analyzer', color: '#fb923c', icon: 'i-crosshair',
+      desc: 'Análise e mitigação de DDoS',
+      skills: ['explico como um ataque de negação funciona', 'ajudo a preparar o servidor para aguentar picos', 'monto um plano de resposta a incidente'],
+      starters: [['Mitigar DDoS', 'Como protejo o meu site contra um ataque DDoS?'], ['Meu site caiu', 'Meu site está fora do ar. Como descubro se é ataque?']] },
+
+    { id: 'codegen', group: 'Programação', name: 'Gerador de Código', color: '#60a5fa', icon: 'i-code',
+      desc: 'Qualquer linguagem',
+      skills: ['escrevo a função pronta para colar e rodar', 'explico o código linha a linha', 'adapto para a linguagem que você usa'],
+      starters: [['Criar uma função', 'Escreva uma função que [o que ela faz] em [linguagem].'], ['Explicar código', 'Explique o que este código faz: [cole aqui]']] },
+    { id: 'shell', group: 'Programação', name: 'Shell & Scripts', color: '#4ade80', icon: 'i-term',
+      desc: 'Bash, PowerShell, automações',
+      skills: ['escrevo o script de automação comentado', 'explico cada comando antes de você rodar', 'aviso o que é perigoso apagar'],
+      starters: [['Automatizar backup', 'Script para fazer backup de uma pasta todo dia.'], ['Renomear em massa', 'Comando para renomear vários arquivos de uma vez.']] },
+    { id: 'reverse', group: 'Programação', name: 'Engenharia Reversa', color: '#f87171', icon: 'i-filecode',
+      desc: 'Decompilação e análise de binários',
+      skills: ['explico como um binário é estruturado', 'ajudo a entender o que um programa faz', 'ensino as ferramentas do ramo'],
+      starters: [['O que é', 'Para que serve engenharia reversa e onde é usada?'], ['Começar a analisar', 'Como começo a analisar um executável desconhecido com segurança?']] },
+    { id: 'api', group: 'Programação', name: 'API Builder', color: '#a78bfa', icon: 'i-braces',
+      desc: 'Crie APIs REST completas',
+      skills: ['desenho as rotas REST do zero', 'escrevo o código do endpoint pronto', 'mostro como testar com exemplos'],
+      starters: [['Criar uma API', 'Crie uma API REST de cadastro de clientes em [linguagem].'], ['Documentar rota', 'Escreva a documentação desta rota: [cole aqui]']] },
+    { id: 'sql', group: 'Programação', name: 'SQL Generator', color: '#22d3ee', icon: 'i-db',
+      desc: 'Queries e schemas',
+      skills: ['escrevo a query já com os nomes das suas tabelas', 'explico joins e agregações sem enrolação', 'desenho o schema do banco'],
+      starters: [['Montar uma query', 'Query que traga os 10 produtos mais vendidos do mês.'], ['Desenhar o banco', 'Monte o schema de um banco para uma loja online.']] },
+    { id: 'webhooks', group: 'Programação', name: 'Webhooks & Bots', color: '#fbbf24', icon: 'i-webhook',
+      desc: 'Automações e integrações',
+      skills: ['monto o fluxo entre dois serviços', 'escrevo o webhook que recebe e trata o evento', 'ligo a automação no Zapier, n8n ou em código'],
+      starters: [['Ligar dois apps', 'Quero que um pedido novo caia no meu WhatsApp. Como faço?'], ['Criar um webhook', 'Escreva um webhook que recebe um pagamento e salva no banco.']] },
   ];
   const agentById = id => AGENT_LIST.find(a => a.id === id) || null;
 
-  // Rosto de cada agente: forma em matriz de pixels 9x9, a mesma ideia do S da marca.
-  const AG_SHAPES = {
-    square: { eye: 4, g: ['.#######.', '#########', '#########', '#########', '#########', '#########', '#########', '#########', '.#######.'] },
-    circle: { eye: 4, g: ['..#####..', '.#######.', '#########', '#########', '#########', '#########', '#########', '.#######.', '..#####..'] },
-    triangle: { eye: 6, g: ['....#....', '...###...', '...###...', '..#####..', '..#####..', '.#######.', '.#######.', '#########', '#########'] },
-    diamond: { eye: 4, g: ['....#....', '...###...', '..#####..', '.#######.', '#########', '.#######.', '..#####..', '...###...', '....#....'] },
-    ghost: { eye: 3, g: ['..#####..', '.#######.', '#########', '#########', '#########', '#########', '#########', '#########', '#.##.##.#'] },
-    bot: { eye: 5, g: ['...###...', '....#....', '.#######.', '#########', '#########', '#########', '#########', '#########', '.#######.'] },
-  };
+  // Avatar do agente: um azulejo arredondado com o ícone, na cor do agente.
   function agentAvatar(a, cls = '') {
-    const s = AG_SHAPES[a.shape];
-    let svg = '';
-    s.g.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === '#') svg += `<rect class="px" x="${c * 4}" y="${r * 4}" width="3.6" height="3.6" rx=".8"/>`; }));
-    const y = s.eye * 4;
-    svg += [3, 5].map(c => a.eyes === 'sleepy'
-      ? `<rect class="eye" x="${c * 4 - .4}" y="${y + 1.1}" width="4.4" height="1.4" rx=".7"/>`
-      : `<rect class="eye" x="${c * 4}" y="${y}" width="3.6" height="3.6" rx=".8"/>`).join('');
-    return `<span class="ag-av${cls ? ' ' + cls : ''}" style="--ag:${a.color}" aria-hidden="true"><svg viewBox="0 0 35.6 35.6">${svg}</svg></span>`;
+    return `<span class="ag-av${cls ? ' ' + cls : ''}" style="--ag:${a.color}" aria-hidden="true">${icon(a.icon)}</span>`;
   }
-
 
   /* ---------------- Estado ---------------- */
   const DAY = 864e5;
@@ -414,7 +414,7 @@ O Tor protege o caminho, não o comportamento: o que você publica ou baixa aind
 Mantenha a calma e as mãos à vista. Se houver abuso, anote nome, viatura e horário e procure a Corregedoria, a Defensoria Pública ou o Ministério Público.
 
 Isto é orientação geral; num caso concreto, fale com um advogado.`],
-      ], { agent: 'juridico' }),
+      ]),
       conv('cannabis', 'Cannabis medicinal: o que é verdade', 26, [
         ['user', 'Cannabis medicinal funciona mesmo? Como é a regra no Brasil?'],
         ['ai', `**A regra hoje**
@@ -441,7 +441,7 @@ O CBD interage com outros remédios, como anticoagulantes e antiepilépticos. O 
 - **O saldo:** a Comissão Nacional da Verdade, em 2014, reconheceu 434 mortos e desaparecidos políticos
 
 A Lei da Anistia, de 1979, e o fim da censura prévia abriram o caminho para a redemocratização.`],
-      ], { agent: 'professor' }),
+      ]),
       conv('piramide', 'Isso é pirâmide?', 70, [
         ['user', 'Me chamaram para um clube que rende 10% ao mês e paga bônus por indicação. Vale a pena?'],
         ['ai', `Tem todos os sinais de pirâmide:
@@ -458,7 +458,7 @@ Pirâmide é crime contra a economia popular e, quando para de entrar gente nova
 - Se já entrou, tente sacar logo e guarde todos os comprovantes
 
 Denúncia: CVM, Procon ou delegacia.`, { thought: 2, model: 'Pensar' }],
-      ], { agent: 'financas' }),
+      ]),
       conv('mistura', 'Álcool com remédio: o que é perigoso', 96, [
         ['user', 'Quais remédios são perigosos de misturar com álcool?'],
         ['ai', `As combinações mais perigosas:
@@ -1050,12 +1050,18 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
     setAgent(id);
   }
 
+  const agentRow = (a, k) => `<button class="ag-row${a.id === state.agent ? ' is-on' : ''}" data-agent="${a.id}" style="--k:${k}">${agentAvatar(a)}<span class="ag-txt"><span class="ag-name"><b>${a.name}</b>${a.tag ? `<em class="tag${a.tag === 'PRO' ? ' tag-accent' : ''}">${a.tag}</em>` : ''}</span><span class="ag-desc">${a.desc}</span></span></button>`;
   function agentRows(q) {
     const n = norm(q.trim());
-    const list = AGENT_LIST.filter(a => !n || norm(`${a.name} ${a.desc}`).includes(n));
-    if (!list.length) return '<p class="pr-empty">Nenhum agente com esse termo. Tente outra palavra.</p>';
-    return list.map((a, k) => `<button class="ag-row${a.id === state.agent ? ' is-on' : ''}" data-agent="${a.id}" style="--k:${k}">${agentAvatar(a)}
-      <span class="ag-txt"><span class="ag-name"><b>${a.name}</b>${a.tag ? `<em class="tag">${a.tag}</em>` : ''}</span><span class="ag-desc">${a.desc}</span></span></button>`).join('');
+    if (n) {
+      const list = AGENT_LIST.filter(a => norm(`${a.name} ${a.desc} ${a.group}`).includes(n));
+      return list.length ? `<div class="ag-grid">${list.map(agentRow).join('')}</div>` : '<p class="pr-empty">Nenhum agente com esse termo. Tente outra palavra.</p>';
+    }
+    return AG_GROUPS.map(g => {
+      const list = AGENT_LIST.filter(a => a.group === g);
+      if (!list.length) return '';
+      return `<div class="ag-sec"><div class="ag-label">${g} <span>${list.length}</span></div><div class="ag-grid">${list.map(agentRow).join('')}</div></div>`;
+    }).join('');
   }
 
   function agentReply(a, text) {
@@ -2337,8 +2343,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
 
     agents: () => `${closeBtn}<div class="m-body">
       <div class="pr-head"><div class="m-icon">${icon('i-bot')}</div><div><h2 class="m-title">Agentes</h2><p class="m-sub">Especialistas prontos para um assunto. Escolha um e converse direto com ele.</p></div></div>
-      <label class="pr-search">${icon('i-search')}<input id="agentSearch" placeholder="Buscar agente" aria-label="Buscar agente" autocomplete="off" enterkeyhint="search" /></label>
-      <div class="ag-label">Agentes do SKYNETchat <span>${AGENT_LIST.length}</span></div>
+      <label class="pr-search">${icon('i-search')}<input id="agentSearch" placeholder="Buscar entre ${AGENT_LIST.length} agentes" aria-label="Buscar agente" autocomplete="off" enterkeyhint="search" /></label>
       <div class="ag-list" id="agentList">${agentRows('')}</div>
     </div>`,
 
