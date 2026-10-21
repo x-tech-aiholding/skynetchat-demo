@@ -216,6 +216,7 @@ a { color: inherit; text-decoration: none; }
 ::selection { background: var(--accent-soft); color: var(--fg); }
 [data-theme="system"] ::selection { background: var(--fg); color: var(--bg); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.modal:focus { outline: 0; }
 [hidden] { display: none !important; }
 
 .i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -538,8 +539,6 @@ kbd {
 .chip-x { width: 22px; height: 22px; display: grid; place-items: center; border-radius: var(--r-xs); color: var(--fg-3); }
 .chip-x:hover { background: var(--surface-3); color: var(--fg); }
 .chip-x .i { width: 13px; height: 13px; }
-.chip.is-mode { background: var(--accent-soft); color: var(--accent); }
-.chip.is-mode .i { color: var(--accent); }
 
 .composer-row { display: flex; align-items: flex-start; gap: 8px; }
 .prompt-sign { display: none; }
@@ -1493,8 +1492,6 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
 [data-theme="system"] .composer[data-state="ready"] .retro-label::after { content: "[ ENTER ]"; }
 [data-theme="system"] .composer[data-state="streaming"] .retro-label::after { content: "[ PARAR ]"; }
 [data-theme="system"] .chip { border: 1px solid var(--line-strong); text-transform: uppercase; font-size: 17px; }
-[data-theme="system"] .chip.is-mode { background: var(--fg); color: var(--bg); text-shadow: none; }
-[data-theme="system"] .chip.is-mode .i, [data-theme="system"] .chip.is-mode .chip-x { color: var(--bg); }
 
 [data-theme="system"] .suggestions { justify-content: flex-start; counter-reset: sg; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; }
 [data-theme="system"] .stage:not(.is-empty) .suggestions { display: none; }
@@ -1597,8 +1594,24 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
     z-index: 70;
     background: var(--bg);
   }
-  .app.drawer-open .sidebar { transform: none; box-shadow: 1px 0 0 var(--line-strong); }
-  .app.drawer-open .scrim { display: block; position: fixed; inset: 0; z-index: 65; background: var(--scrim); animation: fade .2s ease; }
+  /* O escurecimento do fundo é a sombra da gaveta, não uma camada: o Safari do iPhone pinta as barras de cima e de baixo
+     com a cor de camadas fixas de lado a lado, e a camada escura deixava faixas cinza sobre a gaveta. A .scrim fica
+     transparente, só para fechar no toque. */
+  .sidebar { box-shadow: 1px 0 0 transparent, 0 0 0 100vmax transparent; transition: transform .3s var(--ease), box-shadow .3s ease; }
+  .app.drawer-open .sidebar { transform: none; box-shadow: 1px 0 0 var(--line-strong), 0 0 0 100vmax var(--scrim); }
+  .app.drawer-open .scrim { display: block; position: fixed; inset: 0; z-index: 65; }
+  /* A gaveta inteira rola com o dedo: topo, atalhos principais e rodapé ficam presos; os outros atalhos sobem por baixo
+     do topo e a fileira de ícones aparece no lugar (o JS liga .is-compact). Nada anima altura durante o toque. */
+  .sidebar { overflow-y: auto; overscroll-behavior: contain; }
+  .sb-head, .sb-primary, .sb-foot { position: sticky; z-index: 3; background: var(--bg); }
+  .sb-head { top: 0; }
+  .sb-primary { top: 56px; }
+  .sb-foot { bottom: 0; margin-top: auto; }
+  .sb-fold, .sidebar.is-compact .sb-fold { grid-template-rows: 1fr; opacity: 1; transition: none; }
+  .sb-mini-wrap { position: sticky; top: calc(56px + var(--sbp, 77px)); z-index: 2; display: block; height: 0; overflow: visible; pointer-events: none; transition: opacity .2s ease; }
+  .sidebar.is-compact .sb-mini-wrap { pointer-events: auto; }
+  .sb-mini { background: var(--bg); padding-bottom: 6px; }
+  .sb-history { flex: none; min-height: 0; overflow: visible; }
   .sb-head [data-action="toggle-sidebar"] { display: none; }
   .app .tb-open, .app.sb-collapsed .tb-open { display: none; }
   .tb-drawer { display: inline-grid; }
@@ -1624,8 +1637,12 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
 
   .settings { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   .split { grid-template-columns: minmax(0, 1fr); }
-  .gt-panel { display: none; }
-  .modal.is-split .m-close { color: var(--fg-2); }
+  /* Grupo: o tutorial em pixels vem no topo, com a legenda logo abaixo do desenho */
+  .gt-panel { display: flex; flex-direction: column; order: -1; min-height: 0; }
+  .gt-panel canvas { position: relative; inset: auto; height: 230px; flex: none; }
+  .gt-cap { position: static; padding: 0 20px 18px; background: none; }
+  [data-theme="system"] .gt-panel { border-left: 0; border-bottom: 1px solid var(--line); }
+  [data-theme="system"] .gt-cap { background: none; }
   .page-in { padding: 12px 18px 40px; }
   .pj-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pj-cols { grid-template-columns: minmax(0, 1fr); gap: 24px; }
@@ -1643,8 +1660,8 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
   :root { --fs-h1: 28px; }
   [data-theme="system"] { --fs-h1: 36px; }
   .m-body { padding: 26px 20px 22px; }
-  .modal-layer { padding: 10px; align-items: end; }
-  .modal.is-palette { align-self: start; margin-top: 6vh; }
+  .modal-layer { padding: 10px; }
+  .modal.is-palette { align-self: center; margin-top: 0; }
   .prompt-tabs { margin: 14px -20px 0; padding: 0 20px 2px; }
   .prompt-list, .ag-list { grid-template-columns: minmax(0, 1fr); }
   .pr-head .m-icon { display: none; }
@@ -1676,13 +1693,6 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; }
   .composer-tools { gap: 6px; }
   .tools-left, .tools-right { gap: 4px; min-width: 0; }
   .tools-left { overflow: hidden; }
-  /* Popovers viram folha inferior centralizada no celular (o JS posiciona inline; !important vence) */
-  .popover { left: 12px !important; right: 12px !important; top: auto !important;
-    bottom: calc(14px + env(safe-area-inset-bottom)) !important;
-    width: auto !important; min-width: 0 !important; max-width: none !important;
-    max-height: 72dvh; overflow-y: auto; border-radius: var(--r-xl);
-    animation: sheet .24s var(--ease); }
-  @keyframes sheet { from { opacity: 0; transform: translateY(16px); } }
   .msg.user .bubble { max-width: 88%; }
 }
 

@@ -847,6 +847,8 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
   const popover = $('#popover');
   const modalLayer = $('#modalLayer');
   const modal = $('#modal');
+  // No celular, focar um campo abre o teclado e cobre a tela: o foco automático é só para quem usa mouse.
+  const autoFocus = el => { if (el && matchMedia('(hover: hover)').matches) el.focus(); };
 
   /* ---------------- Cor de destaque ---------------- */
   // Seis cores prontas. As variáveis de CSS de cada uma ficam no styles.css ([data-accent]); aqui ficam os tons das animações.
@@ -878,6 +880,13 @@ Muitas vezes o de R$ 18 mil deixa marcenaria ou material de fora. Peça os três
     $('meta[name="theme-color"]').setAttribute('content', THEME_BG[t]);
     $$('[data-theme-set]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.themeSet === t)));
     updatePlaceholder();
+    // O Safari do iPhone pinta as barras de cima e de baixo com a cor dos elementos fixos e só relê quando o layout muda;
+    // com a gaveta aberta, as barras ficavam com o tema anterior. Mexer 1px na gaveta por dois quadros força a releitura.
+    const sb = $('.app.drawer-open .sidebar');
+    if (sb) {
+      sb.style.bottom = '1px';
+      requestAnimationFrame(() => requestAnimationFrame(() => { sb.style.bottom = ''; }));
+    }
   }
 
   function setTheme(t) {
@@ -1575,7 +1584,7 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
     showEmpty();
     renderHistory();
     closeDrawer();
-    input.focus();
+    autoFocus(input);
   }
 
   function openConv(id) {
@@ -1639,6 +1648,25 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
       return mixc(hexc('#6d28d9'), hexc('#3b0f8c'), (x + y) / 40);
     },
   ];
+  // As cenas foram desenhadas em roxo: os tons roxos giram para o matiz da cor de destaque; sol, rosa, estrelas e branco ficam.
+  const toHsl = ([r, g, b]) => {
+    r /= 255; g /= 255; b /= 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    if (!d) return [0, 0, l];
+    const h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [h * 60, d / (1 - Math.abs(2 * l - 1)), l];
+  };
+  const fromHsl = ([h, s, l]) => {
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+    const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+  };
+  const PURPLE_HUE = toHsl(hexc('#7c3aed'))[0];
+  const tintScene = (col, shift) => {
+    if (!shift) return col;
+    const [h, s, l] = toHsl(col);
+    return h >= 225 && h <= 305 && s > .15 ? fromHsl([(h + shift + 360) % 360, s, l]) : col;
+  };
   function pixelScene(cv) {
     const ctx = cv.getContext('2d');
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -1656,10 +1684,11 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
       // 0 a .5 s ruído, até 2,4 s revela, até 3,6 s segura, depois volta ao ruído
       const p = lt < .5 ? 0 : lt < 2.4 ? (lt - .5) / 1.9 : lt < 3.6 ? 1 : 1 - (lt - 3.6) / .6;
       const sys = getTheme() === 'system';
+      const shift = toHsl(hexc(currentAccent().solid))[0] - PURPLE_HUE;
       const cell = size / SCENE_N;
       for (let y = 0; y < SCENE_N; y++) for (let x = 0; x < SCENE_N; x++) {
         const rnd = pxHash(x + k * 31, y);
-        let col = p > rnd * .92 ? scene(x, y) : noise[Math.floor(pxHash(x, y + Math.floor(t * 12)) * noise.length)];
+        let col = tintScene(p > rnd * .92 ? scene(x, y) : noise[Math.floor(pxHash(x, y + Math.floor(t * 12)) * noise.length)], shift);
         if (sys) { const l = (.3 * col[0] + .59 * col[1] + .11 * col[2]) / 255; col = [l * 60, l * 255, l * 120]; }
         ctx.fillStyle = `rgb(${col.map(Math.round)})`;
         ctx.fillRect(x * cell + .5, y * cell + .5, cell - 1, cell - 1);
@@ -1687,7 +1716,7 @@ Enquanto isso, teste as sugestões da tela inicial ou troque para o tema **Syste
   function addFiles(list) {
     [...list].slice(0, 10).forEach(f => state.files.push({ name: f.name, size: f.size }));
     renderChips();
-    input.focus();
+    autoFocus(input);
   }
 
   composer.addEventListener('submit', e => {
@@ -2019,8 +2048,12 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
   function placePop() {
     const { place, align } = popPlace;
     const r = popAnchor.getBoundingClientRect();
-    const p = popover.getBoundingClientRect();
+    // Mede sem a escala da animação de entrada e sem a posição anterior (que encolhe a largura junto da borda).
+    popover.style.left = popover.style.top = '0px';
+    const p = { width: popover.offsetWidth, height: popover.offsetHeight };
     let left = align === 'end' ? r.right - p.width : r.left;
+    // No celular o popup fica no centro da tela, na largura dele, preso logo acima ou abaixo do botão.
+    if (matchMedia('(max-width: 520px)').matches) left = (innerWidth - p.width) / 2;
     left = Math.max(12, Math.min(left, innerWidth - p.width - 12));
     let top = place === 'above' ? r.top - p.height - 8 : r.bottom + 6;
     if (top + p.height > innerHeight - 12) top = r.top - p.height - 8;
@@ -2134,7 +2167,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     const [k, v] = act.split(':');
     if (k === 'model') setModel(v);
     else if (k === 'attach') { fileTarget = 'chat'; $('#fileInput').click(); }
-    else if (k === 'mode') { setMode(v); if (modalLayer.hidden) input.focus(); }
+    else if (k === 'mode') { setMode(v); if (modalLayer.hidden) autoFocus(input); }
     else if (k === 'instagram') window.open('https://instagram.com/skynetchat.ai', '_blank', 'noopener');
     else if (k === 'termos') toast('Os Termos de Serviço abrem aqui quando o site estiver no ar.');
     else if (k === 'logout') { state.user = null; store.set('skynet-user', null); renderAccount(); greet(); toast('Você saiu da conta.'); }
@@ -2594,7 +2627,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     const cv = $('canvas', panel), cap = $('.gt-cap', panel);
     panel.style.setProperty('--tut', currentAccent().deep);
     panel.style.setProperty('--tut-pale', currentAccent().pale);
-    const SCENE = 4.6, CYCLE = SCENE * 3, C = 10;
+    const SCENE = 4.6, CYCLE = SCENE * 3;
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const t0 = performance.now();
     let offset = 0, shown = -1;
@@ -2614,6 +2647,10 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       ctx.globalAlpha = 1;
       ctx.fillStyle = pal.bg;
       ctx.fillRect(0, 0, W, H);
+      // No desktop a legenda fica por cima do desenho (13 linhas reservadas embaixo); no celular ela vem abaixo do canvas
+      // e a casa encolhe até a cena caber (26 linhas de altura e 35 colunas de largura, com folga).
+      const capRows = getComputedStyle(cap).position === 'absolute' ? 13 : 0;
+      const C = Math.max(5, Math.min(10, Math.floor(W / 37), Math.floor((H - 6) / (28 + capRows))));
       const cols = Math.floor(W / C), rows = Math.floor(H / C);
       const ox = (W - cols * C) / 2, oy = 6;
       const tt = reduced ? SCENE * .7 : ((((now - t0) / 1000 + offset) % CYCLE) + CYCLE) % CYCLE;
@@ -2633,7 +2670,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       const text = (str, x0, y0, color, n = str.length, p = 1) => [...str].slice(0, n).forEach((ch, i) => (GT_FONT[ch] || []).forEach((row, r) => [...row].forEach((v, c) => { if (v === '1') put(x0 + i * 4 + c, y0 + r, color, 1, p); })));
       const rect = (x0, y0, w, h, color, a = 1, p = 1) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) put(x, y, color, a, p); };
       const appear = start => Math.max(0, Math.min(1, (lt - start) / .3));
-      const cx = Math.floor(cols / 2), cy = Math.floor((rows - 13) / 2);
+      const cx = Math.floor(cols / 2), cy = Math.floor((rows - capRows) / 2);
       if (k === 0) {
         // card da sessão: o nome se escreve, depois o código aparece letra a letra
         for (let x = cx - 17; x <= cx + 17; x++) { put(x, cy - 8, pal.b, .9); put(x, cy + 8, pal.b, .9); }
@@ -2945,17 +2982,21 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     if (name === 'loginCode') mountTurnstile();
     modalLayer.hidden = false;
     closeDrawer();
-    if (name === 'palette') { renderPalette(''); $('#palInput').focus(); }
-    // Nas listas, abrir o teclado do celular de cara esconde o conteúdo.
-    else if (browse && !matchMedia('(hover: hover)').matches) modal.querySelector('.m-close')?.focus();
-    else (modal.querySelector('input:not([readonly]), textarea') || modal.querySelector('.m-close'))?.focus();
+    if (name === 'palette') renderPalette('');
+    // No celular nenhum popup abre com algo selecionado: nem o campo (o teclado cobriria o conteúdo) nem o X (aparecia
+    // com o anel de foco). Lá o foco vai para o próprio popup, que não tem contorno.
+    const field = name === 'palette' ? $('#palInput') : modal.querySelector('input:not([readonly]), textarea');
+    if (matchMedia('(hover: hover)').matches) (field || modal.querySelector('.m-close'))?.focus();
+    else modal.focus({ preventScroll: true });
   }
   function closeModal() {
     if (modalLayer.hidden) return;
     dropTurnstile();
     modalLayer.hidden = true;
     modal.innerHTML = '';
-    lastFocus?.focus?.();
+    // Devolver o foco ao campo de texto reabriria o teclado do celular.
+    if (lastFocus?.matches?.('input, textarea')) autoFocus(lastFocus);
+    else if (matchMedia('(hover: hover)').matches) lastFocus?.focus?.();
   }
 
   /* ---------------- Paleta ---------------- */
@@ -3067,10 +3108,9 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       m.innerHTML = b.querySelector('svg').outerHTML;
       mini.appendChild(m);
     });
-    // Segue a intenção de quem rola: para baixo recolhe (basta o histórico ter rolagem), para cima no topo volta.
+    // Desktop: segue a intenção de quem rola o histórico; para baixo recolhe (basta ter rolagem), para cima no topo volta.
     // Logo depois de recolher, o histórico cresce e a rolagem pode voltar ao zero sozinha; essa volta é ignorada.
-    // Recolhe pelo scroll (desktop e mobile): desceu com rolagem disponível, recolhe; voltou ao topo, abre.
-    // Depois de recolher, o histórico cresce e o scrollTop pode cair sozinho a zero; esse rebote é ignorado pelo lock.
+    const mobile = () => matchMedia('(max-width: 860px)').matches;
     let lockUntil = 0, lastY = 0;
     const compact = on => {
       if (on === sb.classList.contains('is-compact')) return;
@@ -3079,10 +3119,12 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
     };
     const overflow = () => historyEl.scrollHeight - historyEl.clientHeight > 4;
     historyEl.addEventListener('wheel', e => {
+      if (mobile()) return;
       if (e.deltaY > 2 && overflow()) compact(true);
       else if (e.deltaY < -2 && historyEl.scrollTop <= 0) compact(false);
     }, { passive: true });
     historyEl.addEventListener('scroll', () => {
+      if (mobile()) return;
       const y = historyEl.scrollTop;
       if (performance.now() > lockUntil) {
         if (y > 36 && y > lastY && overflow()) compact(true);
@@ -3090,7 +3132,22 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       }
       lastY = y;
     }, { passive: true });
-
+    // Celular: animar a altura no meio do toque brigava com o scroll. Lá a gaveta inteira rola com o dedo (o CSS prende
+    // o topo e o rodapé), os atalhos sobem por baixo do topo e a fileira de ícones aparece quando eles passaram.
+    const fold = $('.sb-fold', sb), primary = $('.sb-primary', sb);
+    sb.addEventListener('scroll', () => {
+      if (!mobile()) return;
+      sb.style.setProperty('--sbp', primary.offsetHeight + 'px');
+      sb.classList.toggle('is-compact', sb.scrollTop > fold.offsetHeight - 24);
+      if (!popover.hidden && sb.contains(popAnchor)) closePop();
+    }, { passive: true });
+    let wasMobile = mobile();
+    window.addEventListener('resize', () => {
+      if (mobile() === wasMobile) return;
+      wasMobile = mobile();
+      sb.classList.remove('is-compact');
+      sb.scrollTop = historyEl.scrollTop = 0;
+    });
   })();
   function toggleSidebar() {
     app.classList.toggle('sb-collapsed');
@@ -3147,7 +3204,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       if (state.view !== 'chat' || current()) newChat();
       setMode(m);
       closeDrawer();
-      if (modalLayer.hidden) input.focus();
+      if (modalLayer.hidden) autoFocus(input);
       return;
     }
 
@@ -3192,7 +3249,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       const hint = $('#gsHint');
       hint.classList.remove('is-err');
       hint.textContent = join ? 'Peça o código para quem criou a sessão. Ele também vem no link de convite.' : 'Você recebe um código para mandar ao grupo.';
-      $(join ? '#joinForm input' : '#sessionForm input').focus();
+      autoFocus($(join ? '#joinForm input' : '#sessionForm input'));
       return;
     }
 
@@ -3335,7 +3392,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       case 'effort': effortMenu(a); break;
       case 'prompt-new': openModal('promptNew'); break;
       case 'otp-paste': {
-        const fill = txt => { const d = (txt || '').replace(/\D/g, '').slice(0, 12); $('#otpInput').value = (d.match(/.{1,4}/g) || []).join('-'); $('#otpInput').focus(); paintOtp(d); };
+        const fill = txt => { const d = (txt || '').replace(/\D/g, '').slice(0, 12); $('#otpInput').value = (d.match(/.{1,4}/g) || []).join('-'); autoFocus($('#otpInput')); paintOtp(d); };
         if (navigator.clipboard?.readText) navigator.clipboard.readText().then(fill).catch(() => { $('#otpInput').focus(); toast('Cole com Ctrl+V ou ⌘V.'); });
         else { $('#otpInput').focus(); toast('Cole com Ctrl+V ou ⌘V.'); }
         break;
@@ -3352,8 +3409,8 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
       case 'np-upload': pickIcon(url => { newProj.icon = url; paintNewProjIcon(); }); break;
       case 'effort-models': effortView('models'); break;
       case 'effort-reset': setModel('rapido', true); break;
-      case 'clear-agent': setAgent(null); input.focus(); break;
-      case 'leave-session': setSession(null); input.focus(); break;
+      case 'clear-agent': setAgent(null); autoFocus(input); break;
+      case 'leave-session': setSession(null); autoFocus(input); break;
       case 'open-data': openModal('settings', 'dados'); break;
       case 'copy-session':
         copy('https://skynetchat.net/g/' + a.dataset.code);
@@ -3655,7 +3712,7 @@ gl_FragColor=vec4(col*inside+uB*halo,inside+halo*.85);
   function fillInput(text) {
     input.value = text;
     autosize();
-    input.focus();
+    autoFocus(input);
     const a = text.indexOf('['), b = text.indexOf(']', a);
     if (a >= 0 && b > a) input.setSelectionRange(a, b + 1);
     else input.setSelectionRange(text.length, text.length);
