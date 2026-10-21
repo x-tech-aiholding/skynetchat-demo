@@ -1209,7 +1209,6 @@ kbd {
 .pay .plans { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 12px; margin-top: 22px; align-items: stretch; }
 .pay .plan { padding: 20px 22px 22px; }
 .pay .plan:not(.is-pro) { background: transparent; border-color: var(--line-strong); }
-.pay .plan.is-pro { box-shadow: 0 18px 44px -14px color-mix(in srgb, var(--accent-solid) 45%, transparent); }
 .pay .price { margin-top: 8px; }
 .pay .price strong { font-size: 30px; }
 .pay .plan-for { margin: 6px 0 14px; }
